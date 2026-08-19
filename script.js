@@ -15,6 +15,9 @@ if (menuToggle && nav) {
   });
 }
 
+const ownershipGrid = document.querySelector(".ownership-grid");
+if (ownershipGrid) ownershipGrid.classList.add("strategy-grid");
+
 const year = document.getElementById("year");
 if (year) year.textContent = new Date().getFullYear();
 
