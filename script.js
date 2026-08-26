@@ -73,21 +73,39 @@ function buildSlider(track, options = {}) {
     next.disabled = track.scrollLeft + track.clientWidth >= track.scrollWidth - 4;
   };
 
-  prev.addEventListener('click', () => track.scrollBy({ left: -cardStep(), behavior: reduceMotion ? 'auto' : 'smooth' }));
-  next.addEventListener('click', () => track.scrollBy({ left: cardStep(), behavior: reduceMotion ? 'auto' : 'smooth' }));
+  const moveByCard = direction => {
+    track.scrollBy({ left: direction * cardStep(), behavior: reduceMotion ? 'auto' : 'smooth' });
+  };
+
+  prev.addEventListener('click', () => moveByCard(-1));
+  next.addEventListener('click', () => moveByCard(1));
   track.addEventListener('scroll', () => requestAnimationFrame(updateStatus), { passive: true });
   window.addEventListener('resize', updateStatus, { passive: true });
 
+  let wheelLocked = false;
   track.addEventListener('wheel', event => {
-    const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
-    if (!delta) return;
+    const delta = Math.abs(event.deltaY) >= Math.abs(event.deltaX) ? event.deltaY : event.deltaX;
+    if (Math.abs(delta) < 2) return;
+
     const maxScroll = track.scrollWidth - track.clientWidth;
     if (maxScroll <= 1) return;
-    const atStart = track.scrollLeft <= 1;
-    const atEnd = track.scrollLeft >= maxScroll - 1;
-    if ((delta < 0 && atStart) || (delta > 0 && atEnd)) return;
+
+    const direction = delta > 0 ? 1 : -1;
+    const atStart = track.scrollLeft <= 4;
+    const atEnd = track.scrollLeft >= maxScroll - 4;
+
+    // At the carousel edges, return control to normal page scrolling.
+    if ((direction < 0 && atStart) || (direction > 0 && atEnd)) return;
+
     event.preventDefault();
-    track.scrollLeft += delta * 1.1;
+    if (wheelLocked) return;
+
+    wheelLocked = true;
+    moveByCard(direction);
+    window.setTimeout(() => {
+      wheelLocked = false;
+      updateStatus();
+    }, reduceMotion ? 80 : 420);
   }, { passive: false });
 
   let pointerDown = false;
