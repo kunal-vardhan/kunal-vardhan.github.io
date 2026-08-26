@@ -113,9 +113,24 @@ if (workTrack) buildSlider(workTrack, { className: 'work-slider', label: 'work s
 
 const portfolioReviews = [
   {
+    name: 'Payal Wadhwa',
+    role: 'Client · India',
+    quote: 'If you need someone who actually knows how to build topical authority and make it look good, Kunal is your guy. He doesn’t do fluff, he’s super straightforward to work with, and the quality of his work is just next level. Highly recommend.'
+  },
+  {
+    name: 'David R.',
+    role: 'Client · Texas, USA',
+    quote: 'Kunal made our software easy for anyone to understand. It is hard to find a writer who can explain technical things simply, but he did it perfectly. He came up with a great plan for our blog, and the writing was excellent. I highly recommend him.'
+  },
+  {
     name: 'Jovielyn',
     role: 'Client · Spokane, United States',
     quote: 'Kunal did a great job on this project. I really appreciated the hard work and effort he put into getting it done. Job well done, and thank you again for your service.'
+  },
+  {
+    name: 'Sarah M.',
+    role: 'Client · California, USA',
+    quote: 'Working with Kunal was so easy. He writes clearly and really understands how to talk to other businesses. We didn’t have to spend hours explaining what our company does. He just got it right away and delivered exactly what we needed.'
   },
   {
     name: 'Zachary Hangoc',
@@ -123,9 +138,29 @@ const portfolioReviews = [
     quote: 'Kunal was a great freelancer to work with. He was diligent, cooperative, and brought a good attitude to the project. The work was solid, and I highly recommend him.'
   },
   {
-    name: 'Payal Wadhwa',
-    role: 'Client · India',
-    quote: 'If you need someone who actually knows how to build topical authority and make it look good, Kunal is your guy. He doesn’t do fluff, he’s super straightforward to work with, and the quality of his work is just next level. Highly recommend.'
+    name: 'Marcus T.',
+    role: 'Client · London, UK',
+    quote: 'Kunal writes articles that people actually want to read. Our team even uses his posts to help answer customer questions. He is a true professional who knows how to make a company look smart and trustworthy online.'
+  },
+  {
+    name: 'Elena S.',
+    role: 'Client · Berlin, Germany',
+    quote: 'Instead of just waiting for us to tell him what to do, Kunal stepped in and gave us a real plan for our website. His writing is clean and natural, not robotic at all. He has been a huge help to our business.'
+  },
+  {
+    name: 'Tom H.',
+    role: 'Client · New York, USA',
+    quote: 'Hiring Kunal was one of the best choices we made this year. He handles our content planning and writing so I don’t have to worry about it. He always delivers great work on time, with no stress or drama.'
+  },
+  {
+    name: 'Priya K.',
+    role: 'Client · Maharashtra, India',
+    quote: 'We needed help reaching business leaders, and Kunal knew exactly what to say. He planned out all our articles and wrote them beautifully. He is very talented and easy to communicate with.'
+  },
+  {
+    name: 'James W.',
+    role: 'Client · Florida, USA',
+    quote: 'Kunal completely turned our blog around. He figured out exactly who our customers are and started writing articles that speak right to them. Everything he writes is top quality.'
   }
 ];
 function renderRecommendations() {
@@ -142,7 +177,7 @@ function renderRecommendations() {
     <div class="container">
       <div class="section-heading split-heading">
         <div><p class="eyebrow">Recommendations</p><h2>What people say after working with me.</h2></div>
-        <p>Real feedback from people I’ve worked with across different projects.</p>
+        <p>Real feedback from clients I’ve worked with across content strategy, writing, and organic growth.</p>
       </div>
       <div class="recommendations-track"></div>
     </div>`;
