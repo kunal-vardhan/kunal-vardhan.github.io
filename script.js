@@ -1,8 +1,3 @@
-const enhancementStyles = document.createElement('link');
-enhancementStyles.rel = 'stylesheet';
-enhancementStyles.href = '/enhancements.css?v=2';
-document.head.appendChild(enhancementStyles);
-
 const menuToggle = document.querySelector('.menu-toggle');
 const nav = document.querySelector('.site-nav');
 if (menuToggle && nav) {
