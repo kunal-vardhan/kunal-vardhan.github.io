@@ -111,8 +111,23 @@ function buildSlider(track, options = {}) {
 const workTrack = document.querySelector('.work-grid');
 if (workTrack) buildSlider(workTrack, { className: 'work-slider', label: 'work sample' });
 
-// Recommendations are rendered only from real source text. Add entries here after the user supplies them.
-const portfolioReviews = [];
+const portfolioReviews = [
+  {
+    name: 'Jovielyn',
+    role: 'Client · Spokane, United States',
+    quote: 'Kunal did a great job on this project. I really appreciated the hard work and effort he put into getting it done. Job well done, and thank you again for your service.'
+  },
+  {
+    name: 'Zachary Hangoc',
+    role: 'Founder, Learniverse · Canada',
+    quote: 'Kunal was a great freelancer to work with. He was diligent, cooperative, and brought a good attitude to the project. The work was solid, and I highly recommend him.'
+  },
+  {
+    name: 'Payal Wadhwa',
+    role: 'Client · India',
+    quote: 'If you need someone who actually knows how to build topical authority and make it look good, Kunal is your guy. He doesn’t do fluff, he’s super straightforward to work with, and the quality of his work is just next level. Highly recommend.'
+  }
+];
 function renderRecommendations() {
   if (!portfolioReviews.length) return;
   const workSection = document.querySelector('#work');
@@ -127,7 +142,7 @@ function renderRecommendations() {
     <div class="container">
       <div class="section-heading split-heading">
         <div><p class="eyebrow">Recommendations</p><h2>What people say after working with me.</h2></div>
-        <p>Short notes from people who have seen the work up close.</p>
+        <p>Real feedback from people I’ve worked with across different projects.</p>
       </div>
       <div class="recommendations-track"></div>
     </div>`;
