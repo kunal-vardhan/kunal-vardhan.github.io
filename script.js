@@ -78,6 +78,18 @@ function buildSlider(track, options = {}) {
   track.addEventListener('scroll', () => requestAnimationFrame(updateStatus), { passive: true });
   window.addEventListener('resize', updateStatus, { passive: true });
 
+  track.addEventListener('wheel', event => {
+    const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+    if (!delta) return;
+    const maxScroll = track.scrollWidth - track.clientWidth;
+    if (maxScroll <= 1) return;
+    const atStart = track.scrollLeft <= 1;
+    const atEnd = track.scrollLeft >= maxScroll - 1;
+    if ((delta < 0 && atStart) || (delta > 0 && atEnd)) return;
+    event.preventDefault();
+    track.scrollLeft += delta * 1.1;
+  }, { passive: false });
+
   let pointerDown = false;
   let startX = 0;
   let startScroll = 0;
