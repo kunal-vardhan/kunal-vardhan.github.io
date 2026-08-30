@@ -1,3 +1,13 @@
+/* Portfolio interaction, slider, recommendation, and v6 enhancement layer */
+
+// Load the v6 visual/UX layer without requiring another HTML rewrite.
+if (!document.querySelector('link[href*="portfolio-v6.css"]')) {
+  const v6 = document.createElement('link');
+  v6.rel = 'stylesheet';
+  v6.href = '/portfolio-v6.css?v=1';
+  document.head.appendChild(v6);
+}
+
 const menuToggle = document.querySelector('.menu-toggle');
 const nav = document.querySelector('.site-nav');
 if (menuToggle && nav) {
@@ -16,6 +26,25 @@ const year = document.getElementById('year');
 if (year) year.textContent = new Date().getFullYear();
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Keep the reduced-motion brand list as complete as the animated ticker.
+const brandList = document.querySelector('.brand-proof-list');
+if (brandList) {
+  ['Investopedia', 'Healthline'].forEach(name => {
+    if ([...brandList.querySelectorAll('span')].some(span => span.textContent.trim() === name)) return;
+    const span = document.createElement('span');
+    span.textContent = name;
+    brandList.appendChild(span);
+  });
+}
+
+// Replace the old illustrative HTML tables with the richer strategy system + workbook preview.
+if (document.querySelector('#strategy-samples')) {
+  const strategyScript = document.createElement('script');
+  strategyScript.src = '/strategy-workbook.js?v=2';
+  strategyScript.defer = true;
+  document.body.appendChild(strategyScript);
+}
 
 function buildSlider(track, options = {}) {
   if (!track || track.dataset.sliderReady === 'true') return;
@@ -93,13 +122,10 @@ function buildSlider(track, options = {}) {
     const direction = delta > 0 ? 1 : -1;
     const atStart = track.scrollLeft <= 4;
     const atEnd = track.scrollLeft >= maxScroll - 4;
-
-    // At the carousel edges, return control to normal page scrolling.
     if ((direction < 0 && atStart) || (direction > 0 && atEnd)) return;
 
     event.preventDefault();
     if (wheelLocked) return;
-
     wheelLocked = true;
     moveByCard(direction);
     window.setTimeout(() => {
@@ -142,63 +168,25 @@ const workTrack = document.querySelector('.work-grid');
 if (workTrack) buildSlider(workTrack, { className: 'work-slider', label: 'work sample' });
 
 const portfolioReviews = [
-  {
-    name: 'Payal Wadhwa',
-    role: 'Client · India',
-    quote: 'If you need someone who actually knows how to build topical authority and make it look good, Kunal is your guy. He doesn’t do fluff, he’s super straightforward to work with, and the quality of his work is just next level. Highly recommend.'
-  },
-  {
-    name: 'David R.',
-    role: 'Client · Texas, USA',
-    quote: 'Kunal made our software easy for anyone to understand. It is hard to find a writer who can explain technical things simply, but he did it perfectly. He came up with a great plan for our blog, and the writing was excellent. I highly recommend him.'
-  },
-  {
-    name: 'Jovielyn',
-    role: 'Client · Spokane, United States',
-    quote: 'Kunal did a great job on this project. I really appreciated the hard work and effort he put into getting it done. Job well done, and thank you again for your service.'
-  },
-  {
-    name: 'Sarah M.',
-    role: 'Client · California, USA',
-    quote: 'Working with Kunal was so easy. He writes clearly and really understands how to talk to other businesses. We didn’t have to spend hours explaining what our company does. He just got it right away and delivered exactly what we needed.'
-  },
-  {
-    name: 'Zachary Hangoc',
-    role: 'Founder, Learniverse · Canada',
-    quote: 'Kunal was a great freelancer to work with. He was diligent, cooperative, and brought a good attitude to the project. The work was solid, and I highly recommend him.'
-  },
-  {
-    name: 'Marcus T.',
-    role: 'Client · London, UK',
-    quote: 'Kunal writes articles that people actually want to read. Our team even uses his posts to help answer customer questions. He is a true professional who knows how to make a company look smart and trustworthy online.'
-  },
-  {
-    name: 'Elena S.',
-    role: 'Client · Berlin, Germany',
-    quote: 'Instead of just waiting for us to tell him what to do, Kunal stepped in and gave us a real plan for our website. His writing is clean and natural, not robotic at all. He has been a huge help to our business.'
-  },
-  {
-    name: 'Tom H.',
-    role: 'Client · New York, USA',
-    quote: 'Hiring Kunal was one of the best choices we made this year. He handles our content planning and writing so I don’t have to worry about it. He always delivers great work on time, with no stress or drama.'
-  },
-  {
-    name: 'Priya K.',
-    role: 'Client · Maharashtra, India',
-    quote: 'We needed help reaching business leaders, and Kunal knew exactly what to say. He planned out all our articles and wrote them beautifully. He is very talented and easy to communicate with.'
-  },
-  {
-    name: 'James W.',
-    role: 'Client · Florida, USA',
-    quote: 'Kunal completely turned our blog around. He figured out exactly who our customers are and started writing articles that speak right to them. Everything he writes is top quality.'
-  }
+  { name: 'Payal Wadhwa', role: 'Client · India', quote: 'If you need someone who actually knows how to build topical authority and make it look good, Kunal is your guy. He doesn’t do fluff, he’s super straightforward to work with, and the quality of his work is just next level. Highly recommend.' },
+  { name: 'David R.', role: 'Client · Texas, USA', quote: 'Kunal made our software easy for anyone to understand. It is hard to find a writer who can explain technical things simply, but he did it perfectly. He came up with a great plan for our blog, and the writing was excellent. I highly recommend him.' },
+  { name: 'Jovielyn', role: 'Client · Spokane, United States', quote: 'Kunal did a great job on this project. I really appreciated the hard work and effort he put into getting it done. Job well done, and thank you again for your service.' },
+  { name: 'Sarah M.', role: 'Client · California, USA', quote: 'Working with Kunal was so easy. He writes clearly and really understands how to talk to other businesses. We didn’t have to spend hours explaining what our company does. He just got it right away and delivered exactly what we needed.' },
+  { name: 'Zachary Hangoc', role: 'Founder, Learniverse · Canada', quote: 'Kunal was a great freelancer to work with. He was diligent, cooperative, and brought a good attitude to the project. The work was solid, and I highly recommend him.' },
+  { name: 'Marcus T.', role: 'Client · London, UK', quote: 'Kunal writes articles that people actually want to read. Our team even uses his posts to help answer customer questions. He is a true professional who knows how to make a company look smart and trustworthy online.' },
+  { name: 'Elena S.', role: 'Client · Berlin, Germany', quote: 'Instead of just waiting for us to tell him what to do, Kunal stepped in and gave us a real plan for our website. His writing is clean and natural, not robotic at all. He has been a huge help to our business.' },
+  { name: 'Tom H.', role: 'Client · New York, USA', quote: 'Hiring Kunal was one of the best choices we made this year. He handles our content planning and writing so I don’t have to worry about it. He always delivers great work on time, with no stress or drama.' },
+  { name: 'Priya K.', role: 'Client · Maharashtra, India', quote: 'We needed help reaching business leaders, and Kunal knew exactly what to say. He planned out all our articles and wrote them beautifully. He is very talented and easy to communicate with.' },
+  { name: 'James W.', role: 'Client · Florida, USA', quote: 'Kunal completely turned our blog around. He figured out exactly who our customers are and started writing articles that speak right to them. Everything he writes is top quality.' }
 ];
+
 function renderRecommendations() {
   if (!portfolioReviews.length) return;
   const workSection = document.querySelector('#work');
   const aboutSection = document.querySelector('#about');
   const anchor = aboutSection || workSection?.nextElementSibling;
-  if (!workSection || !anchor) return;
+  // Prevent recommendations from ever appearing on standalone case-study pages.
+  if (!workSection || !aboutSection || !anchor) return;
 
   const section = document.createElement('section');
   section.className = 'section alt-section recommendations-section';
@@ -207,7 +195,7 @@ function renderRecommendations() {
     <div class="container">
       <div class="section-heading split-heading">
         <div><p class="eyebrow">Recommendations</p><h2>What people say after working with me.</h2></div>
-        <p>Real feedback from clients I’ve worked with across content strategy, writing, and organic growth.</p>
+        <p>Feedback from clients I’ve worked with across content strategy, writing, and organic growth.</p>
       </div>
       <div class="recommendations-track"></div>
     </div>`;
@@ -220,15 +208,12 @@ function renderRecommendations() {
     article.innerHTML = `
       <div class="recommendation-quote">“</div>
       <blockquote>${review.quote}</blockquote>
-      <div class="recommendation-person">
-        <strong>${review.name}</strong>
-        <span>${review.role || ''}</span>
-      </div>`;
+      <div class="recommendation-person"><strong>${review.name}</strong><span>${review.role || ''}</span></div>`;
     track.appendChild(article);
   });
 
   buildSlider(track, { className: 'recommendations-slider', label: 'recommendation' });
-  if (nav) {
+  if (nav && !nav.querySelector('a[href="#recommendations"]')) {
     const workLink = nav.querySelector('a[href="#work"]');
     const link = document.createElement('a');
     link.href = '#recommendations';
@@ -244,14 +229,14 @@ function setupMotionReveal() {
   const selectors = [
     '.hero-copy', '.section-heading', '.execution-block', '.motion-slider-shell',
     '.about-sticky', '.about-copy', '.contact-box', '.case-page-hero .container',
-    '.case-prose section', '.case-aside', '.recommendations-section'
+    '.case-prose section', '.case-aside', '.recommendations-section', '.strategy-visual', '.actual-workbook'
   ];
   const elements = document.querySelectorAll(selectors.join(','));
   elements.forEach((element, index) => {
     element.classList.add('motion-reveal');
     if (element.matches('.about-copy')) element.classList.add('motion-from-right');
     else if (element.matches('.about-sticky,.case-aside')) element.classList.add('motion-from-left');
-    else if (element.matches('.motion-slider-shell,.execution-block')) element.classList.add('motion-rise-soft');
+    else if (element.matches('.motion-slider-shell,.execution-block,.actual-workbook')) element.classList.add('motion-rise-soft');
     element.style.setProperty('--motion-delay', `${Math.min(index % 5, 4) * 70}ms`);
   });
 
@@ -261,14 +246,15 @@ function setupMotionReveal() {
       entry.target.classList.add('is-motion-visible');
       observer.unobserve(entry.target);
     });
-  }, { threshold: 0.12, rootMargin: '0px 0px -45px 0px' });
+  }, { threshold: 0.1, rootMargin: '0px 0px -35px 0px' });
   document.querySelectorAll('.motion-reveal').forEach(element => observer.observe(element));
 }
-setupMotionReveal();
+// Let dynamically loaded workbook markup land first.
+window.setTimeout(setupMotionReveal, 120);
 
 function setupTilt() {
   if (reduceMotion || !window.matchMedia('(hover:hover) and (pointer:fine)').matches) return;
-  const tiltTargets = document.querySelectorAll('.case-card,.strategy-grid article,.ownership-grid article,.belief-card,.motion-slide,.recommendation-card');
+  const tiltTargets = document.querySelectorAll('.case-card,.strategy-grid article,.ownership-grid article,.belief-card,.motion-slide,.recommendation-card,.strategy-visual');
   tiltTargets.forEach(card => {
     card.classList.add('motion-tilt');
     card.addEventListener('pointermove', event => {
@@ -286,7 +272,7 @@ function setupTilt() {
     });
   });
 }
-setupTilt();
+window.setTimeout(setupTilt, 140);
 
 function setupMagneticButtons() {
   if (reduceMotion || !window.matchMedia('(hover:hover) and (pointer:fine)').matches) return;
@@ -357,7 +343,7 @@ if (window.matchMedia('(hover:hover) and (pointer:fine)').matches && !reduceMoti
     document.body.classList.add('cursor-ready');
   }, { passive: true });
 
-  const interactive = 'a,button,.case-card,.motion-slide,.strategy-grid article,.ownership-grid article,.belief-card,.about-facts div,.case-page-metrics div,.recommendation-card';
+  const interactive = 'a,button,.case-card,.motion-slide,.strategy-grid article,.ownership-grid article,.belief-card,.about-facts div,.case-page-metrics div,.recommendation-card,.strategy-visual';
   document.addEventListener('mouseover', event => {
     if (event.target.closest(interactive)) ring.classList.add('is-active');
   });
