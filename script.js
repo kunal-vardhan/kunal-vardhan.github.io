@@ -16,7 +16,7 @@ if (isCaseStudy) {
     document.head.appendChild(caseCss);
   }
   const caseEnhancer = document.createElement('script');
-  caseEnhancer.src = '/case-study-enhancements.js?v=1';
+  caseEnhancer.src = '/case-study-enhancements.js?v=2';
   caseEnhancer.defer = true;
   document.body.appendChild(caseEnhancer);
 }
