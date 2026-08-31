@@ -1,0 +1,61 @@
+name: Use local work previews
+
+on:
+  push:
+    paths:
+      - '.github/workflows/use-local-work-previews.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  switch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Replace remote screenshot URLs with local assets
+        run: |
+          python <<'PY'
+          from pathlib import Path
+
+          replacements = {
+              'https://image.thum.io/get/fullpage/noanimate/https://learniverse.app/': '/work-previews/learniverse-home.png',
+              'https://image.thum.io/get/fullpage/noanimate/https://www.digitalapi.ai/industry/healthcare': '/work-previews/digitalapi-healthcare.png',
+              'https://image.thum.io/get/fullpage/noanimate/https://www.digitalapi.ai/comparison/digitalapi-vs-mulesoft': '/work-previews/digitalapi-vs-mulesoft.png',
+              'https://image.thum.io/get/fullpage/noanimate/https://www.digitalapi.ai/': '/work-previews/digitalapi-home.png',
+              'https://image.thum.io/get/fullpage/noanimate/https://apty.ai/apty-vs-walkme/': '/work-previews/apty-vs-walkme.png',
+              'https://image.thum.io/get/fullpage/noanimate/https://apty.ai/apty-ai/': '/work-previews/apty-ai.png',
+              'https://image.thum.io/get/fullpage/noanimate/https://apty.ai/': '/work-previews/apty-home.png',
+              'https://image.thum.io/get/fullpage/noanimate/https://apty.ai/blog/servicenow-implementation-cost/': '/work-previews/apty-servicenow-implementation-cost.png',
+              'https://image.thum.io/get/fullpage/noanimate/https://www.digitalapi.ai/blogs/api-management-cost': '/work-previews/digitalapi-api-management-cost.png',
+              'https://image.thum.io/get/fullpage/noanimate/https://www.digitalapi.ai/blogs/top-10-api-frameworks-choose-your-best-fit-for-2026': '/work-previews/digitalapi-api-frameworks.png',
+              'https://image.thum.io/get/fullpage/noanimate/https://www.digitalapi.ai/blogs/api-rate-limit-exceeded': '/work-previews/digitalapi-rate-limit.png',
+              'https://image.thum.io/get/fullpage/noanimate/https://fareye.com/resources/blogs/what-is-direct-store-delivery': '/work-previews/fareye-direct-store-delivery.png',
+              'https://image.thum.io/get/fullpage/noanimate/https://fareye.com/resources/blogs/best-delivery-routing-software': '/work-previews/fareye-routing-software.png',
+              'https://image.thum.io/get/fullpage/noanimate/https://fareye.com/resources/blogs/what-is-last-mile-carrier-tracking': '/work-previews/fareye-last-mile-carrier-tracking.png',
+              'https://image.thum.io/get/fullpage/noanimate/https://www.lateshipment.com/blog/returns-management-software/': '/work-previews/lateshipment-returns-management-software.png',
+              'https://image.thum.io/get/fullpage/noanimate/https://www.lateshipment.com/blog/fedex-delivery-exceptions/': '/work-previews/lateshipment-fedex-delivery-exceptions.png',
+          }
+
+          for filename in ['work.html', 'index.html']:
+              path = Path(filename)
+              text = path.read_text(encoding='utf-8')
+              before = text
+              for remote, local in replacements.items():
+                  text = text.replace(remote, local)
+              path.write_text(text, encoding='utf-8')
+              print(filename, 'updated' if text != before else 'no changes')
+          PY
+
+      - name: Commit local preview references
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add work.html index.html
+          if git diff --cached --quiet; then
+            echo "No preview references needed changing"
+          else
+            git commit -m "Use locally hosted work preview screenshots"
+            git push
+          fi
