@@ -2,16 +2,31 @@
   const path = location.pathname;
   if (!path.includes('/case-studies/')) return;
 
-  // The supplied screenshots live inside SVG wrapper documents. Loading those wrappers
-  // as <object> is more reliable than nesting them inside an <img> element.
-  document.querySelectorAll('.proof-frame img[src*=".svg"], .evidence-frame img[src*=".svg"]').forEach(img => {
-    const obj = document.createElement('object');
-    obj.data = img.getAttribute('src').split('?')[0];
-    obj.type = 'image/svg+xml';
-    obj.className = 'proof-object';
-    obj.setAttribute('aria-label', img.alt || 'Case study evidence screenshot');
-    obj.innerHTML = `<p>${img.alt || 'Case study evidence screenshot'}</p>`;
-    img.replaceWith(obj);
+  // Proof screenshots are currently stored as original JPEG/PNG data inside SVG wrapper files.
+  // Some browsers are inconsistent when those SVG wrappers are used as <img> or <object>.
+  // Fetch the same-origin wrapper, extract the original raster data URI, and render that directly.
+  const proofImages = document.querySelectorAll('.proof-frame img[src*=".svg"], .evidence-frame img[src*=".svg"]');
+  proofImages.forEach(async img => {
+    const wrapperSrc = img.getAttribute('src');
+    if (!wrapperSrc || img.dataset.proofReady === 'true') return;
+
+    try {
+      const wrapperUrl = wrapperSrc.split('?')[0];
+      const response = await fetch(`${wrapperUrl}?proof=4`, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`Proof asset returned ${response.status}`);
+      const svgText = await response.text();
+      const match = svgText.match(/(?:href|xlink:href)=["'](data:image\/(?:jpeg|jpg|png|webp);base64,[^"']+)["']/i);
+      if (!match) throw new Error('Embedded screenshot data was not found');
+
+      img.src = match[1];
+      img.removeAttribute('width');
+      img.removeAttribute('height');
+      img.dataset.proofReady = 'true';
+      img.classList.add('proof-raster-ready');
+    } catch (error) {
+      img.dataset.proofError = 'true';
+      console.error('Unable to render case-study evidence screenshot:', error);
+    }
   });
 
   const insertAfterH2 = (selector, html) => {
