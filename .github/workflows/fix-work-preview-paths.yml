@@ -1,0 +1,43 @@
+name: Fix work preview paths
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-work-preview-paths.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out portfolio
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Fix broken local preview paths
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('work.html')
+          s = p.read_text()
+          fixes = {
+            '/work-previews/apty-home.pngblog/servicenow-implementation-cost/': '/work-previews/apty-servicenow-implementation-cost.png',
+            '/work-previews/digitalapi-home.pngblogs/api-management-cost': '/work-previews/digitalapi-api-management-cost.png',
+            '/work-previews/digitalapi-home.pngblogs/top-10-api-frameworks-choose-your-best-fit-for-2026': '/work-previews/digitalapi-api-frameworks.png',
+            '/work-previews/digitalapi-home.pngblogs/api-rate-limit-exceeded': '/work-previews/digitalapi-rate-limit.png',
+          }
+          for old, new in fixes.items():
+              if old not in s:
+                  raise SystemExit(f'Missing expected broken path: {old}')
+              s = s.replace(old, new)
+          p.write_text(s)
+          PY
+      - name: Commit path fixes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add work.html
+          git commit -m "Fix article preview image paths"
+          git push
