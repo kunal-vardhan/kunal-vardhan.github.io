@@ -1,0 +1,95 @@
+name: Capture work previews
+
+on:
+  push:
+    paths:
+      - '.github/workflows/capture-work-previews.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out portfolio
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install playwright
+          npx playwright install --with-deps chromium
+
+      - name: Capture full-page previews
+        run: |
+          mkdir -p work-previews
+          node <<'NODE'
+          const { chromium } = require('playwright');
+          const path = require('path');
+
+          const samples = [
+            ['learniverse-home.png', 'https://learniverse.app/'],
+            ['digitalapi-healthcare.png', 'https://www.digitalapi.ai/industry/healthcare'],
+            ['digitalapi-vs-mulesoft.png', 'https://www.digitalapi.ai/comparison/digitalapi-vs-mulesoft'],
+            ['digitalapi-home.png', 'https://www.digitalapi.ai/'],
+            ['apty-vs-walkme.png', 'https://apty.ai/apty-vs-walkme/'],
+            ['apty-ai.png', 'https://apty.ai/apty-ai/'],
+            ['apty-home.png', 'https://apty.ai/'],
+            ['apty-servicenow-implementation-cost.png', 'https://apty.ai/blog/servicenow-implementation-cost/'],
+            ['digitalapi-api-management-cost.png', 'https://www.digitalapi.ai/blogs/api-management-cost'],
+            ['digitalapi-api-frameworks.png', 'https://www.digitalapi.ai/blogs/top-10-api-frameworks-choose-your-best-fit-for-2026'],
+            ['digitalapi-rate-limit.png', 'https://www.digitalapi.ai/blogs/api-rate-limit-exceeded'],
+            ['fareye-direct-store-delivery.png', 'https://fareye.com/resources/blogs/what-is-direct-store-delivery'],
+            ['fareye-routing-software.png', 'https://fareye.com/resources/blogs/best-delivery-routing-software'],
+            ['fareye-last-mile-carrier-tracking.png', 'https://fareye.com/resources/blogs/what-is-last-mile-carrier-tracking'],
+            ['lateshipment-returns-management-software.png', 'https://www.lateshipment.com/blog/returns-management-software/'],
+            ['lateshipment-fedex-delivery-exceptions.png', 'https://www.lateshipment.com/blog/fedex-delivery-exceptions/']
+          ];
+
+          (async () => {
+            const browser = await chromium.launch({ headless: true });
+            const context = await browser.newContext({
+              viewport: { width: 1440, height: 1000 },
+              deviceScaleFactor: 1,
+              userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/132 Safari/537.36'
+            });
+
+            for (const [filename, url] of samples) {
+              const page = await context.newPage();
+              try {
+                console.log(`Capturing ${url}`);
+                await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 });
+                await page.waitForTimeout(5000);
+                await page.screenshot({
+                  path: path.join('work-previews', filename),
+                  fullPage: true,
+                  animations: 'disabled'
+                });
+              } catch (error) {
+                console.error(`Failed ${url}:`, error.message);
+              } finally {
+                await page.close();
+              }
+            }
+
+            await browser.close();
+          })();
+          NODE
+
+      - name: Commit screenshots
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add work-previews
+          if git diff --cached --quiet; then
+            echo "No screenshot changes to commit"
+          else
+            git commit -m "Capture local work preview screenshots"
+            git push
+          fi
