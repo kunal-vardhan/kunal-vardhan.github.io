@@ -1,0 +1,26 @@
+/* Shared case-study presentation fixes */
+.case-diagram{padding:20px}
+.case-diagram-title{margin:0 0 14px;line-height:1.35}
+.case-diagram-note{margin:0 0 18px!important;line-height:1.6}
+
+.case-flow{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.case-flow-step{display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-width:0;min-height:138px;padding:15px 16px}
+.case-flow-step b{display:block;width:100%;margin:0;color:var(--sage);font-size:.62rem;line-height:1.45;letter-spacing:.06em;text-transform:uppercase}
+.case-flow-step span{display:block;width:100%;color:var(--slate);font-size:.72rem!important;line-height:1.65}
+
+.journey-lane{min-width:0;padding:14px}
+.journey-lane b{display:block;margin:0 0 7px;line-height:1.4;letter-spacing:.06em}
+.journey-lane h4{margin:0 0 7px;line-height:1.35}
+.journey-lane p{margin:0;line-height:1.6}
+
+.cluster-map{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;min-height:0;padding:4px 0 0}
+.cluster-hub{position:relative;left:auto;top:auto;transform:none;width:auto;height:auto;min-height:78px;grid-column:1/-1;padding:16px 18px;border:1px solid var(--sage);background:#e5ebe6;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:"Playfair Display",serif;font-size:.9rem;line-height:1.4}
+.cluster-hub:after{content:"Related pages";display:block;margin-top:5px;color:var(--sage);font-family:Inter,system-ui,sans-serif;font-size:.56rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.cluster-node{position:relative;left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;transform:none!important;width:auto;min-height:62px;padding:11px 13px;border:1px solid var(--line);background:var(--paper);color:var(--slate);display:grid;place-items:center;text-align:center;font-size:.67rem;line-height:1.45}
+.cluster-node.n5{grid-column:1/-1}
+
+@media(max-width:700px){
+  .case-flow,.cluster-map{grid-template-columns:1fr}
+  .case-flow-step{min-height:0}
+  .cluster-hub,.cluster-node.n5{grid-column:1}
+}
