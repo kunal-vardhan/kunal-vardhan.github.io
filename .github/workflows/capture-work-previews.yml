@@ -52,6 +52,28 @@ jobs:
             ['lateshipment-fedex-delivery-exceptions.png', 'https://www.lateshipment.com/blog/fedex-delivery-exceptions/']
           ];
 
+          async function loadLazyContent(page) {
+            await page.waitForTimeout(2500);
+            await page.evaluate(async () => {
+              await new Promise(resolve => {
+                let total = 0;
+                const step = Math.max(500, Math.floor(window.innerHeight * 0.8));
+                const timer = setInterval(() => {
+                  window.scrollBy(0, step);
+                  total += step;
+                  const height = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+                  if (total >= height + window.innerHeight) {
+                    clearInterval(timer);
+                    resolve();
+                  }
+                }, 180);
+              });
+            });
+            await page.waitForTimeout(2200);
+            await page.evaluate(() => window.scrollTo(0, 0));
+            await page.waitForTimeout(1000);
+          }
+
           (async () => {
             const browser = await chromium.launch({ headless: true });
             const context = await browser.newContext({
@@ -65,7 +87,7 @@ jobs:
               try {
                 console.log(`Capturing ${url}`);
                 await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 });
-                await page.waitForTimeout(5000);
+                await loadLazyContent(page);
                 await page.screenshot({
                   path: path.join('work-previews', filename),
                   fullPage: true,
@@ -90,6 +112,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No screenshot changes to commit"
           else
-            git commit -m "Capture local work preview screenshots"
+            git commit -m "Recapture complete work preview screenshots"
             git push
           fi
