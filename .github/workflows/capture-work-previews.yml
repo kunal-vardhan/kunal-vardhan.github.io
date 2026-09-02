@@ -190,5 +190,6 @@ jobs:
             echo "No preview changes to commit"
           else
             git commit -m "Optimize Work Library preview performance"
-            git push
+            git pull --rebase origin main
+            git push origin HEAD:main
           fi
