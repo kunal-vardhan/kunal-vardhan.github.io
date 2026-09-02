@@ -144,6 +144,25 @@ jobs:
                 return `<div class="page-scroll-frame page-scroll-tiles">${imgs}</div>`;
               });
             }
+
+            html = html.replace(
+              '<div class="ebook-scroll-frame"><div class="ebook-preview-status">Loading real eBook pages…</div><img data-b64-src="/ebook-previews/meal-plan.b64" alt="Real pages from the Your Personal Meal Plan eBook" hidden></div>',
+              '<div class="ebook-scroll-frame"><img src="/ebook-previews/meal-plan.webp" alt="Real pages from the Your Personal Meal Plan eBook" loading="lazy" decoding="async" fetchpriority="low"></div>'
+            );
+            html = html.replace(
+              '<div class="ebook-scroll-frame"><div class="ebook-preview-status">Loading real eBook pages…</div><img data-b64-src="/ebook-previews/best-year.b64" alt="Real pages from Live the Best Year of Your Life" hidden></div>',
+              '<div class="ebook-scroll-frame"><img src="/ebook-previews/best-year.webp" alt="Real pages from Live the Best Year of Your Life" loading="lazy" decoding="async" fetchpriority="low"></div>'
+            );
+            html = html.replace(
+              '<img src="/ebook-previews/self-motivation.webp" alt="Real pages from A Self-Motivation Guidebook" loading="lazy">',
+              '<img src="/ebook-previews/self-motivation.webp" alt="Real pages from A Self-Motivation Guidebook" loading="lazy" decoding="async" fetchpriority="low">'
+            );
+            html = html.replace(
+              '<img src="/ebook-previews/soup-broth.webp" alt="Real pages from the SoupChick weight-loss soup and broth guide" loading="lazy">',
+              '<img src="/ebook-previews/soup-broth.webp" alt="Real pages from the SoupChick weight-loss soup and broth guide" loading="lazy" decoding="async" fetchpriority="low">'
+            );
+            html = html.replace('/ebook-library.css?v=2', '/ebook-library.css?v=3');
+            html = html.replace(/\n<script>\n\(function\(\)\{\n  const previews=document\.querySelectorAll\('img\[data-b64-src\]'\);[\s\S]*?<\/script>/, '');
             fs.writeFileSync('work.html', html);
           }
 
