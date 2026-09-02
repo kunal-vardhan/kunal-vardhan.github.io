@@ -20,172 +20,175 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Install Playwright
+      - name: Install Playwright and Sharp
         run: |
           npm init -y
-          npm install playwright
+          npm install playwright sharp
           npx playwright install --with-deps chromium
 
-      - name: Capture clean full-page previews
+      - name: Capture and optimize full-page previews
         run: |
           mkdir -p work-previews
           node <<'NODE'
           const { chromium } = require('playwright');
+          const sharp = require('sharp');
+          const fs = require('fs');
           const path = require('path');
 
           const samples = [
-            ['learniverse-home.png', 'https://learniverse.app/'],
-            ['digitalapi-healthcare.png', 'https://www.digitalapi.ai/industry/healthcare'],
-            ['digitalapi-vs-mulesoft.png', 'https://www.digitalapi.ai/comparison/digitalapi-vs-mulesoft'],
-            ['digitalapi-home.png', 'https://www.digitalapi.ai/'],
-            ['apty-vs-walkme.png', 'https://apty.ai/apty-vs-walkme/'],
-            ['apty-ai.png', 'https://apty.ai/apty-ai/'],
-            ['apty-home.png', 'https://apty.ai/'],
-            ['apty-servicenow-implementation-cost.png', 'https://apty.ai/blog/servicenow-implementation-cost/'],
-            ['digitalapi-api-management-cost.png', 'https://www.digitalapi.ai/blogs/api-management-cost'],
-            ['digitalapi-api-frameworks.png', 'https://www.digitalapi.ai/blogs/top-10-api-frameworks-choose-your-best-fit-for-2026'],
-            ['digitalapi-rate-limit.png', 'https://www.digitalapi.ai/blogs/api-rate-limit-exceeded'],
-            ['fareye-direct-store-delivery.png', 'https://fareye.com/resources/blogs/what-is-direct-store-delivery'],
-            ['fareye-routing-software.png', 'https://fareye.com/resources/blogs/best-delivery-routing-software'],
-            ['fareye-last-mile-carrier-tracking.png', 'https://fareye.com/resources/blogs/what-is-last-mile-carrier-tracking'],
-            ['lateshipment-returns-management-software.png', 'https://www.lateshipment.com/blog/returns-management-software/'],
-            ['lateshipment-fedex-delivery-exceptions.png', 'https://www.lateshipment.com/blog/fedex-delivery-exceptions/']
+            ['learniverse-home', 'https://learniverse.app/'],
+            ['digitalapi-healthcare', 'https://www.digitalapi.ai/industry/healthcare'],
+            ['digitalapi-vs-mulesoft', 'https://www.digitalapi.ai/comparison/digitalapi-vs-mulesoft'],
+            ['digitalapi-home', 'https://www.digitalapi.ai/'],
+            ['apty-vs-walkme', 'https://apty.ai/apty-vs-walkme/'],
+            ['apty-ai', 'https://apty.ai/apty-ai/'],
+            ['apty-home', 'https://apty.ai/'],
+            ['apty-servicenow-implementation-cost', 'https://apty.ai/blog/servicenow-implementation-cost/'],
+            ['digitalapi-api-management-cost', 'https://www.digitalapi.ai/blogs/api-management-cost'],
+            ['digitalapi-api-frameworks', 'https://www.digitalapi.ai/blogs/top-10-api-frameworks-choose-your-best-fit-for-2026'],
+            ['digitalapi-rate-limit', 'https://www.digitalapi.ai/blogs/api-rate-limit-exceeded'],
+            ['fareye-direct-store-delivery', 'https://fareye.com/resources/blogs/what-is-direct-store-delivery'],
+            ['fareye-routing-software', 'https://fareye.com/resources/blogs/best-delivery-routing-software'],
+            ['fareye-last-mile-carrier-tracking', 'https://fareye.com/resources/blogs/what-is-last-mile-carrier-tracking'],
+            ['lateshipment-returns-management-software', 'https://www.lateshipment.com/blog/returns-management-software/'],
+            ['lateshipment-fedex-delivery-exceptions', 'https://www.lateshipment.com/blog/fedex-delivery-exceptions/']
           ];
 
+          const popupWords = /newsletter|subscribe|sign\s*up|join\s+(our|the)|email\s+(updates|list)|stay\s+(updated|informed)|get\s+(updates|news)|cookie|consent/i;
+
           async function dismissOverlays(page) {
-            await page.keyboard.press('Escape').catch(() => {});
-
             const closeSelectors = [
-              '[role="dialog"] button[aria-label*="close" i]',
-              '[aria-modal="true"] button[aria-label*="close" i]',
-              'button[aria-label="Close"]',
-              'button[title*="close" i]',
-              '[class*="popup" i] [class*="close" i]',
-              '[class*="modal" i] [class*="close" i]',
-              '[class*="newsletter" i] [class*="close" i]',
-              '[class*="subscribe" i] [class*="close" i]'
+              '[aria-label="Close"]','[aria-label="close"]','button[title="Close"]','button[title="close"]',
+              '.modal button.close','.popup button.close','.newsletter button.close','.modal-close','.popup-close',
+              '[data-testid*="close"]','[class*="close-button"]','[class*="closeButton"]'
             ];
-
             for (const selector of closeSelectors) {
-              const locators = page.locator(selector);
-              const count = Math.min(await locators.count().catch(() => 0), 8);
-              for (let i = 0; i < count; i++) {
-                const item = locators.nth(i);
-                if (await item.isVisible().catch(() => false)) {
-                  await item.click({ force: true, timeout: 1200 }).catch(() => {});
+              try {
+                const matches = page.locator(selector);
+                const count = Math.min(await matches.count(), 8);
+                for (let i = 0; i < count; i++) {
+                  const el = matches.nth(i);
+                  if (await el.isVisible().catch(() => false)) await el.click({ timeout: 1000 }).catch(() => {});
                 }
-              }
+              } catch {}
             }
-
-            await page.evaluate(() => {
-              const popupWords = /newsletter|subscribe|sign\s*up|stay\s+updated|get\s+updates|join\s+our|email\s+updates|cookie|privacy\s+choices/i;
-              const candidates = Array.from(document.querySelectorAll('body *'));
-
-              for (const el of candidates) {
+            await page.keyboard.press('Escape').catch(() => {});
+            await page.evaluate((patternSource) => {
+              const pattern = new RegExp(patternSource, 'i');
+              const viewportArea = window.innerWidth * window.innerHeight;
+              const nodes = [...document.querySelectorAll('body *')];
+              for (const el of nodes) {
                 const style = getComputedStyle(el);
-                if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) continue;
+                if (!['fixed','sticky'].includes(style.position)) continue;
                 const rect = el.getBoundingClientRect();
-                if (rect.width < 180 || rect.height < 60) continue;
-                const text = (el.innerText || '').replace(/\s+/g, ' ').trim();
-                const dialogLike = el.getAttribute('role') === 'dialog' || el.getAttribute('aria-modal') === 'true';
-                const overlayLike = (style.position === 'fixed' || style.position === 'sticky') && Number.parseInt(style.zIndex || '0', 10) >= 10;
-                if ((dialogLike || overlayLike) && popupWords.test(text)) {
-                  el.remove();
-                }
+                if (rect.width * rect.height < viewportArea * 0.08) continue;
+                const text = (el.innerText || '').slice(0, 1200);
+                if (pattern.test(text)) el.remove();
               }
-
-              for (const iframe of document.querySelectorAll('iframe')) {
-                const src = (iframe.getAttribute('src') || '').toLowerCase();
-                if (/intercom|hubspot|drift|crisp|zendesk|chat|popup|newsletter/.test(src)) iframe.remove();
-              }
-            }).catch(() => {});
+              document.documentElement.style.overflow = 'auto';
+              document.body.style.overflow = 'auto';
+            }, popupWords.source).catch(() => {});
           }
 
-          async function loadEverything(page) {
+          async function loadLazyContent(page) {
             await page.waitForTimeout(1800);
             await dismissOverlays(page);
-
-            let lastHeight = 0;
-            let stablePasses = 0;
-            for (let i = 0; i < 90; i++) {
-              const state = await page.evaluate(() => ({
-                y: window.scrollY,
-                viewport: window.innerHeight,
-                height: Math.max(document.body.scrollHeight, document.documentElement.scrollHeight)
-              }));
-
-              if (state.height === lastHeight) stablePasses += 1;
-              else stablePasses = 0;
-              lastHeight = state.height;
-
-              if (state.y + state.viewport >= state.height - 4 && stablePasses >= 2) break;
-              await page.evaluate(step => window.scrollBy(0, step), Math.max(520, Math.floor(state.viewport * 0.78)));
-              await page.waitForTimeout(170);
-              await dismissOverlays(page);
-            }
-
             await page.evaluate(async () => {
-              if (document.fonts && document.fonts.ready) await document.fonts.ready;
-              const pending = Array.from(document.images).filter(img => !img.complete);
-              await Promise.race([
-                Promise.all(pending.map(img => new Promise(resolve => {
-                  img.addEventListener('load', resolve, { once: true });
-                  img.addEventListener('error', resolve, { once: true });
-                }))),
-                new Promise(resolve => setTimeout(resolve, 8000))
-              ]);
-              window.scrollTo(0, 0);
+              await new Promise(resolve => {
+                let total = 0;
+                const step = Math.max(600, Math.floor(window.innerHeight * 0.9));
+                const timer = setInterval(() => {
+                  window.scrollBy(0, step);
+                  total += step;
+                  const height = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+                  if (total >= height + window.innerHeight) {
+                    clearInterval(timer);
+                    resolve();
+                  }
+                }, 130);
+              });
             });
-
-            await page.waitForTimeout(1200);
+            await page.waitForTimeout(1000);
             await dismissOverlays(page);
-            await page.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}' }).catch(() => {});
-            await page.waitForTimeout(350);
+            await page.evaluate(() => window.scrollTo(0, 0));
+            await page.waitForTimeout(400);
+          }
+
+          async function makeTiles(rawPath, name) {
+            const targetWidth = name === 'digitalapi-vs-mulesoft' ? 900 : 760;
+            const tileHeight = 1000;
+            const resized = await sharp(rawPath, { limitInputPixels: false })
+              .resize({ width: targetWidth, withoutEnlargement: true })
+              .webp({ quality: 68, effort: 5, smartSubsample: true })
+              .toBuffer();
+            const meta = await sharp(resized).metadata();
+            const files = [];
+            for (let top = 0, index = 1; top < meta.height; top += tileHeight, index++) {
+              const height = Math.min(tileHeight, meta.height - top);
+              const filename = `${name}-${String(index).padStart(2, '0')}.webp`;
+              await sharp(resized)
+                .extract({ left: 0, top, width: meta.width, height })
+                .webp({ quality: 68, effort: 5, smartSubsample: true })
+                .toFile(path.join('work-previews', filename));
+              files.push(filename);
+            }
+            return files;
+          }
+
+          function rewriteWorkHtml(tileMap) {
+            let html = fs.readFileSync('work.html', 'utf8');
+            for (const [name, files] of Object.entries(tileMap)) {
+              const rx = new RegExp(`<div class="page-scroll-frame"><img src="/work-previews/${name}\\.png" alt="([^"]*)" loading="lazy"></div>`, 'g');
+              html = html.replace(rx, (_whole, alt) => {
+                const imgs = files.map((file, index) => `<img src="/work-previews/${file}" alt="${index === 0 ? alt : ''}" loading="lazy" decoding="async" fetchpriority="low">`).join('');
+                return `<div class="page-scroll-frame page-scroll-tiles">${imgs}</div>`;
+              });
+            }
+            fs.writeFileSync('work.html', html);
           }
 
           (async () => {
             const browser = await chromium.launch({ headless: true });
+            const tileMap = {};
+            fs.readdirSync('work-previews').filter(f => /-\d{2}\.webp$/.test(f)).forEach(f => fs.unlinkSync(path.join('work-previews', f)));
 
-            for (const [filename, url] of samples) {
-              const extraSharp = filename === 'digitalapi-vs-mulesoft.png';
+            for (const [name, url] of samples) {
               const context = await browser.newContext({
-                viewport: { width: extraSharp ? 1280 : 1365, height: 960 },
-                deviceScaleFactor: extraSharp ? 2 : 1.5,
-                colorScheme: 'light',
-                reducedMotion: 'reduce',
+                viewport: { width: 1365, height: 900 },
+                deviceScaleFactor: name === 'digitalapi-vs-mulesoft' ? 1.25 : 1,
                 userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/132 Safari/537.36'
               });
               const page = await context.newPage();
-
+              const rawPath = path.join('/tmp', `${name}.png`);
               try {
                 console.log(`Capturing ${url}`);
                 await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 });
-                await loadEverything(page);
-                await page.screenshot({
-                  path: path.join('work-previews', filename),
-                  fullPage: true,
-                  animations: 'disabled',
-                  caret: 'hide'
-                });
+                await loadLazyContent(page);
+                await page.screenshot({ path: rawPath, fullPage: true, animations: 'disabled' });
+                tileMap[name] = await makeTiles(rawPath, name);
               } catch (error) {
                 console.error(`Failed ${url}:`, error.message);
               } finally {
+                await page.close();
                 await context.close();
+                if (fs.existsSync(rawPath)) fs.unlinkSync(rawPath);
               }
             }
 
+            rewriteWorkHtml(tileMap);
+            fs.readdirSync('work-previews').filter(f => f.endsWith('.png')).forEach(f => fs.unlinkSync(path.join('work-previews', f)));
             await browser.close();
           })();
           NODE
 
-      - name: Commit screenshots
+      - name: Commit optimized previews
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add work-previews
+          git add work-previews work.html
           if git diff --cached --quiet; then
-            echo "No screenshot changes to commit"
+            echo "No preview changes to commit"
           else
-            git commit -m "Recapture clean work preview screenshots"
+            git commit -m "Optimize Work Library preview performance"
             git push
           fi
