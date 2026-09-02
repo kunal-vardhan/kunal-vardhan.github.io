@@ -1,0 +1,29 @@
+name: Install eBook previews
+
+on:
+  push:
+    paths:
+      - '.github/workflows/install-ebook-previews.yml'
+      - 'ebook-previews-q50.zip'
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out portfolio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install optimized eBook previews
+        run: |
+          unzip -o ebook-previews-q50.zip
+          rm ebook-previews-q50.zip
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ebook-previews ebook-previews-q50.zip
+          git commit -m "Install optimized real eBook previews"
+          git push
