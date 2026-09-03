@@ -1,0 +1,49 @@
+name: Fix Meal Plan eBook preview
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-meal-plan-preview.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out portfolio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Restore two valid Meal Plan pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p ebook-previews
+          gh api repos/kunal-vardhan/kunal-vardhan.github.io/git/blobs/adb14a65ff009eced39d9002e1257c90a304126e --jq '.content' | tr -d '\n' | base64 -d > ebook-previews/meal-plan-01.webp
+          gh api repos/kunal-vardhan/kunal-vardhan.github.io/git/blobs/c15c073cb68e681414c3cabf414436f54e064a48 --jq '.content' | tr -d '\n' | base64 -d > ebook-previews/meal-plan-02.webp
+          file ebook-previews/meal-plan-01.webp
+          file ebook-previews/meal-plan-02.webp
+
+      - name: Point only Meal Plan to the valid pages
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('work.html')
+          html = p.read_text()
+          old = '<article class="ebook-sample-card"><div class="visual-work-head"><div><span>FastMate · eBook</span><h3>Your Personal Meal Plan</h3></div></div><div class="ebook-scroll-frame"><img src="/ebook-previews/meal-plan.webp" alt="Real pages from the Your Personal Meal Plan eBook" loading="lazy" decoding="async" fetchpriority="low"></div><p>Selected pages from the 30-day meal-plan project, including the original cover, introductory framing, and a daily meal-plan page.</p></article>'
+          new = '<article class="ebook-sample-card"><div class="visual-work-head"><div><span>FastMate · eBook</span><h3>Your Personal Meal Plan</h3></div></div><div class="ebook-scroll-frame"><img src="/ebook-previews/meal-plan-01.webp" width="420" height="566" alt="Your Personal Meal Plan eBook cover" loading="lazy" decoding="async" fetchpriority="low"><img src="/ebook-previews/meal-plan-02.webp" width="420" height="565" alt="Introductory page from Your Personal Meal Plan" loading="lazy" decoding="async" fetchpriority="low"></div><p>Selected original pages from the 30-day meal-plan project, including the cover and introductory framing.</p></article>'
+          if old not in html:
+              raise SystemExit('Meal Plan markup was not found exactly; refusing to modify anything else.')
+          p.write_text(html.replace(old, new, 1))
+          PY
+
+      - name: Commit only the Meal Plan repair
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add work.html ebook-previews/meal-plan-01.webp ebook-previews/meal-plan-02.webp
+          git commit -m "Fix Meal Plan eBook preview"
+          git push
