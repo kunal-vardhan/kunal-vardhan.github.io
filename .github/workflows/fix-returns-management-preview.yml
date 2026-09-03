@@ -37,19 +37,17 @@ jobs:
             const targetWidth = 760;
             const tileHeight = 1000;
             const rawPath = '/tmp/returns-management.png';
-
-            const resized = await sharp(rawPath, { limitInputPixels: false })
-              .resize({ width: targetWidth, withoutEnlargement: true })
-              .webp({ quality: 68, effort: 5, smartSubsample: true })
-              .toBuffer();
-
-            const meta = await sharp(resized).metadata();
+            const sourceMeta = await sharp(rawPath, { limitInputPixels: false }).metadata();
+            const outputWidth = Math.min(targetWidth, sourceMeta.width);
+            const outputHeight = Math.floor(sourceMeta.height * outputWidth / sourceMeta.width);
             const files = [];
-            for (let top = 0, index = 1; top < meta.height; top += tileHeight, index++) {
-              const height = Math.min(tileHeight, meta.height - top);
+
+            for (let top = 0, index = 1; top < outputHeight; top += tileHeight, index++) {
+              const height = Math.min(tileHeight, outputHeight - top);
               const filename = `${name}-${String(index).padStart(2, '0')}.webp`;
-              await sharp(resized)
-                .extract({ left: 0, top, width: meta.width, height })
+              await sharp(rawPath, { limitInputPixels: false, sequentialRead: true })
+                .resize({ width: targetWidth, withoutEnlargement: true })
+                .extract({ left: 0, top, width: outputWidth, height })
                 .webp({ quality: 68, effort: 5, smartSubsample: true })
                 .toFile(path.join('work-previews', filename));
               files.push(filename);
