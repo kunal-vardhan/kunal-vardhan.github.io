@@ -17,129 +17,25 @@ jobs:
           fetch-depth: 0
 
       - name: Replace one-shot hero motion with scroll fracture
+        env:
+          NEW_CSS_B64: LyogaG9tZXBhZ2UgaGVybyBzZW1hbnRpYyBmcmFjdHVyZSAqLwouaGVyby1mcmFjdHVyZXtwb3NpdGlvbjpyZWxhdGl2ZTtkaXNwbGF5OmlubGluZS1mbGV4O2FsaWduLWl0ZW1zOmJhc2VsaW5lO2dhcDouMThlbTt3aGl0ZS1zcGFjZTpub3dyYXA7dmVydGljYWwtYWxpZ246YmFzZWxpbmU7aXNvbGF0aW9uOmlzb2xhdGV9Ci5oZXJvLWZyYWN0dXJlOjpiZWZvcmV7Y29udGVudDphdHRyKGRhdGEtdGV4dCk7cG9zaXRpb246YWJzb2x1dGU7aW5zZXQ6MDt3aGl0ZS1zcGFjZTpub3dyYXA7Y29sb3I6dHJhbnNwYXJlbnQ7LXdlYmtpdC10ZXh0LXN0cm9rZToxcHggcmdiYSgxMDQsMTIzLDExMiwuNzIpO29wYWNpdHk6dmFyKC0tZnJhY3R1cmUtZ2hvc3QsMCk7ei1pbmRleDowO3BvaW50ZXItZXZlbnRzOm5vbmV9Ci5oZXJvLWZyYWN0dXJlLXdvcmR7cG9zaXRpb246cmVsYXRpdmU7ZGlzcGxheTppbmxpbmUtYmxvY2s7ei1pbmRleDoyO3RyYW5zZm9ybTp0cmFuc2xhdGUzZCh2YXIoLS1meCwwcHgpLHZhcigtLWZ5LDBweCksMCkgcm90YXRlKHZhcigtLWZyLDBkZWcpKSBzY2FsZSh2YXIoLS1mcywxKSk7dHJhbnNmb3JtLW9yaWdpbjo1MCUgNzIlO3dpbGwtY2hhbmdlOnRyYW5zZm9ybX0KLmhlcm8tZnJhY3R1cmUtd29yZDo6YWZ0ZXJ7Y29udGVudDphdHRyKGRhdGEtdGV4dCk7cG9zaXRpb246YWJzb2x1dGU7aW5zZXQ6MDtjb2xvcjp2YXIoLS1pbmspO2NsaXAtcGF0aDppbnNldCgzNiUgLTQ1JSAzNCUgLTQ1JSk7dHJhbnNmb3JtOnRyYW5zbGF0ZTNkKHZhcigtLXNsaWNlLDBweCksMCwwKTtvcGFjaXR5OnZhcigtLXNsaWNlLW9wYWNpdHksMCk7cG9pbnRlci1ldmVudHM6bm9uZTt6LWluZGV4OjN9Ci5oZXJvLWZyYWN0dXJlLXdvcmQ6bnRoLWNoaWxkKDIpOjphZnRlcntjbGlwLXBhdGg6aW5zZXQoMTglIC01NSUgNTUlIC01NSUpfQouaGVyby1mcmFjdHVyZS13b3JkOm50aC1jaGlsZCgzKTo6YWZ0ZXJ7Y2xpcC1wYXRoOmluc2V0KDU1JSAtMzUlIDE1JSAtMzUlKX0KLmhlcm8tZnJhY3R1cmUtcnVsZXtwb3NpdGlvbjphYnNvbHV0ZTtsZWZ0Oi0uMDRlbTtyaWdodDotLjA0ZW07dG9wOjU0JTtoZWlnaHQ6MXB4O2JhY2tncm91bmQ6dmFyKC0tc2FuZCk7b3BhY2l0eTp2YXIoLS1ydWxlLW9wYWNpdHksMCk7dHJhbnNmb3JtOnRyYW5zbGF0ZVgodmFyKC0tcnVsZS14LDBweCkpIHNjYWxlWCh2YXIoLS1ydWxlLXNjYWxlLDEpKTt0cmFuc2Zvcm0tb3JpZ2luOmNlbnRlcjt6LWluZGV4OjE7cG9pbnRlci1ldmVudHM6bm9uZX0KQG1lZGlhKG1heC13aWR0aDo3NjBweCl7Lmhlcm8tZnJhY3R1cmUtd29yZHt3aWxsLWNoYW5nZTphdXRvfS5oZXJvLWZyYWN0dXJlOjpiZWZvcmV7LXdlYmtpdC10ZXh0LXN0cm9rZS13aWR0aDouOHB4fX0KQG1lZGlhKHByZWZlcnMtcmVkdWNlZC1tb3Rpb246cmVkdWNlKXsuaGVyby1mcmFjdHVyZS13b3Jke3RyYW5zZm9ybTpub25lIWltcG9ydGFudH0uaGVyby1mcmFjdHVyZS13b3JkOjphZnRlciwuaGVyby1mcmFjdHVyZTo6YmVmb3JlLC5oZXJvLWZyYWN0dXJlLXJ1bGV7ZGlzcGxheTpub25lIWltcG9ydGFudH19Cg==
+          NEW_JS_B64: LyogaG9tZXBhZ2UgaGVybyBzZW1hbnRpYyBmcmFjdHVyZSAqLwooKCk9PnsKICBjb25zdCBoZXJvPWRvY3VtZW50LnF1ZXJ5U2VsZWN0b3IoJy5zdG9yeS1oZXJvJyk7CiAgY29uc3QgaDE9aGVybz8ucXVlcnlTZWxlY3RvcignaDEnKTsKICBpZighaGVyb3x8IWgxfHxoMS5kYXRhc2V0LmZyYWN0dXJlUmVhZHk9PT0ndHJ1ZScpcmV0dXJuOwogIGgxLmRhdGFzZXQuZnJhY3R1cmVSZWFkeT0ndHJ1ZSc7CiAgY29uc3QgdGFyZ2V0PSdoYXJkIHRvIGV4cGxhaW4uJzsKICBjb25zdCBmdWxsPWgxLnRleHRDb250ZW50fHwnJzsKICBjb25zdCBzdGFydD1mdWxsLmxhc3RJbmRleE9mKHRhcmdldCk7CiAgaWYoc3RhcnQ8MClyZXR1cm47CiAgY29uc3QgYmVmb3JlPWZ1bGwuc2xpY2UoMCxzdGFydCk7CiAgY29uc3QgYWZ0ZXI9ZnVsbC5zbGljZShzdGFydCt0YXJnZXQubGVuZ3RoKTsKICBjb25zdCBwaHJhc2U9ZG9jdW1lbnQuY3JlYXRlRWxlbWVudCgnc3BhbicpOwogIHBocmFzZS5jbGFzc05hbWU9J2hlcm8tZnJhY3R1cmUnOwogIHBocmFzZS5kYXRhc2V0LnRleHQ9dGFyZ2V0OwogIHBocmFzZS5zZXRBdHRyaWJ1dGUoJ2FyaWEtbGFiZWwnLHRhcmdldCk7CiAgY29uc3QgcnVsZT1kb2N1bWVudC5jcmVhdGVFbGVtZW50KCdzcGFuJyk7CiAgcnVsZS5jbGFzc05hbWU9J2hlcm8tZnJhY3R1cmUtcnVsZSc7CiAgcnVsZS5zZXRBdHRyaWJ1dGUoJ2FyaWEtaGlkZGVuJywndHJ1ZScpOwogIGNvbnN0IHdvcmRzPVsnaGFyZCcsJ3RvJywnZXhwbGFpbi4nXS5tYXAoKHdvcmQsaSk9PnsKICAgIGNvbnN0IHNwYW49ZG9jdW1lbnQuY3JlYXRlRWxlbWVudCgnc3BhbicpOwogICAgc3Bhbi5jbGFzc05hbWU9J2hlcm8tZnJhY3R1cmUtd29yZCc7CiAgICBzcGFuLmRhdGFzZXQudGV4dD13b3JkOwogICAgc3Bhbi5kYXRhc2V0LmluZGV4PVN0cmluZyhpKTsKICAgIHNwYW4uc2V0QXR0cmlidXRlKCdhcmlhLWhpZGRlbicsJ3RydWUnKTsKICAgIHNwYW4udGV4dENvbnRlbnQ9d29yZDsKICAgIHBocmFzZS5hcHBlbmRDaGlsZChzcGFuKTsKICAgIHJldHVybiBzcGFuOwogIH0pOwogIHBocmFzZS5hcHBlbmRDaGlsZChydWxlKTsKICBoMS5yZXBsYWNlQ2hpbGRyZW4oZG9jdW1lbnQuY3JlYXRlVGV4dE5vZGUoYmVmb3JlKSxwaHJhc2UsZG9jdW1lbnQuY3JlYXRlVGV4dE5vZGUoYWZ0ZXIpKTsKICBjb25zdCByZWR1Y2VkPXdpbmRvdy5tYXRjaE1lZGlhKCcocHJlZmVycy1yZWR1Y2VkLW1vdGlvbjogcmVkdWNlKScpOwogIGlmKHJlZHVjZWQubWF0Y2hlcylyZXR1cm47CiAgY29uc3QgZGVza3RvcD1be3g6LTc4LHk6LTI1LHI6LTUuMixzOjEuMDM1LHNsaWNlOjMxfSx7eDoxNix5OjQ3LHI6Ni40LHM6Ljk2LHNsaWNlOi0yNH0se3g6OTgseTotMzQscjotNC4xLHM6MS4wMjUsc2xpY2U6Mzl9XTsKICBsZXQgdGlja2luZz1mYWxzZTsKICBjb25zdCBjbGFtcD0obixtaW4sbWF4KT0+TWF0aC5tYXgobWluLE1hdGgubWluKG1heCxuKSk7CiAgY29uc3Qgc21vb3Roc3RlcD10PT50KnQqKDMtMip0KTsKICBjb25zdCByZW5kZXI9KCk9PnsKICAgIHRpY2tpbmc9ZmFsc2U7CiAgICBjb25zdCBoZXJvVG9wPWhlcm8ub2Zmc2V0VG9wOwogICAgY29uc3QgcmFuZ2U9TWF0aC5tYXgoMzMwLGhlcm8ub2Zmc2V0SGVpZ2h0Ki45NCk7CiAgICBjb25zdCBwcm9ncmVzcz1jbGFtcCgod2luZG93LnNjcm9sbFktaGVyb1RvcCsxOCkvcmFuZ2UsMCwxKTsKICAgIGNvbnN0IHdhdmU9TWF0aC5zaW4oTWF0aC5QSSpwcm9ncmVzcyk7CiAgICBjb25zdCBpbnRlbnNpdHk9c21vb3Roc3RlcCh3YXZlKTsKICAgIGNvbnN0IGNvbXBhY3Q9d2luZG93LmlubmVyV2lkdGg8NzYwID8gLjU0IDogMTsKICAgIHBocmFzZS5zdHlsZS5zZXRQcm9wZXJ0eSgnLS1mcmFjdHVyZS1naG9zdCcsKGludGVuc2l0eSouNDgpLnRvRml4ZWQoMykpOwogICAgcGhyYXNlLnN0eWxlLnNldFByb3BlcnR5KCctLXJ1bGUtb3BhY2l0eScsKGludGVuc2l0eSouNzIpLnRvRml4ZWQoMykpOwogICAgcGhyYXNlLnN0eWxlLnNldFByb3BlcnR5KCctLXJ1bGUteCcsYCR7KChwcm9ncmVzcy0uNSkqNTQqaW50ZW5zaXR5KS50b0ZpeGVkKDEpfXB4YCk7CiAgICBwaHJhc2Uuc3R5bGUuc2V0UHJvcGVydHkoJy0tcnVsZS1zY2FsZScsKDEraW50ZW5zaXR5Ki4yNCkudG9GaXhlZCgzKSk7CiAgICB3b3Jkcy5mb3JFYWNoKCh3b3JkLGkpPT57CiAgICAgIGNvbnN0IG09ZGVza3RvcFtpXTsKICAgICAgY29uc3QgbG9jYWw9aW50ZW5zaXR5KigxLShpPT09MT9NYXRoLmFicyhwcm9ncmVzcy0uNSkqLjA4OjApKTsKICAgICAgd29yZC5zdHlsZS5zZXRQcm9wZXJ0eSgnLS1meCcsYCR7KG0ueCpjb21wYWN0KmxvY2FsKS50b0ZpeGVkKDEpfXB4YCk7CiAgICAgIHdvcmQuc3R5bGUuc2V0UHJvcGVydHkoJy0tZnknLGAkeyhtLnkqY29tcGFjdCpsb2NhbCkudG9GaXhlZCgxKX1weGApOwogICAgICB3b3JkLnN0eWxlLnNldFByb3BlcnR5KCctLWZyJyxgJHsobS5yKmxvY2FsKS50b0ZpeGVkKDIpfWRlZ2ApOwogICAgICB3b3JkLnN0eWxlLnNldFByb3BlcnR5KCctLWZzJywoMSsobS5zLTEpKmxvY2FsKS50b0ZpeGVkKDQpKTsKICAgICAgd29yZC5zdHlsZS5zZXRQcm9wZXJ0eSgnLS1zbGljZScsYCR7KG0uc2xpY2UqY29tcGFjdCpsb2NhbCkudG9GaXhlZCgxKX1weGApOwogICAgICB3b3JkLnN0eWxlLnNldFByb3BlcnR5KCctLXNsaWNlLW9wYWNpdHknLChsb2NhbCouODIpLnRvRml4ZWQoMykpOwogICAgfSk7CiAgfTsKICBjb25zdCBxdWV1ZT0oKT0+e2lmKHRpY2tpbmcpcmV0dXJuO3RpY2tpbmc9dHJ1ZTtyZXF1ZXN0QW5pbWF0aW9uRnJhbWUocmVuZGVyKTt9OwogIHdpbmRvdy5hZGRFdmVudExpc3RlbmVyKCdzY3JvbGwnLHF1ZXVlLHtwYXNzaXZlOnRydWV9KTsKICB3aW5kb3cuYWRkRXZlbnRMaXN0ZW5lcigncmVzaXplJyxxdWV1ZSx7cGFzc2l2ZTp0cnVlfSk7CiAgcmVuZGVyKCk7Cn0pKCk7Cg==
         run: |
           python - <<'PY'
+          import base64, os, re
           from pathlib import Path
-          import re
-
-          css_path = Path('story.css')
-          js_path = Path('story.js')
-          index_path = Path('index.html')
-
-          css = css_path.read_text(encoding='utf-8')
-          js = js_path.read_text(encoding='utf-8')
-          index = index_path.read_text(encoding='utf-8')
-
-          css_marker = '/* homepage hero resolve motion */'
-          js_marker = '/* homepage hero resolve motion */'
-          if css_marker not in css:
-              raise SystemExit('Existing hero resolve CSS marker not found')
-          if js_marker not in js:
-              raise SystemExit('Existing hero resolve JS marker not found')
-
-          new_css = r'''/* homepage hero semantic fracture */
-.hero-fracture{position:relative;display:inline-flex;align-items:baseline;gap:.18em;white-space:nowrap;vertical-align:baseline;isolation:isolate}
-.hero-fracture::before{content:attr(data-text);position:absolute;inset:0;white-space:nowrap;color:transparent;-webkit-text-stroke:1px rgba(104,123,112,.72);opacity:var(--fracture-ghost,0);z-index:0;pointer-events:none}
-.hero-fracture-word{position:relative;display:inline-block;z-index:2;transform:translate3d(var(--fx,0px),var(--fy,0px),0) rotate(var(--fr,0deg)) scale(var(--fs,1));transform-origin:50% 72%;will-change:transform}
-.hero-fracture-word::after{content:attr(data-text);position:absolute;inset:0;color:var(--ink);clip-path:inset(36% -45% 34% -45%);transform:translate3d(var(--slice,0px),0,0);opacity:var(--slice-opacity,0);pointer-events:none;z-index:3}
-.hero-fracture-word:nth-child(2)::after{clip-path:inset(18% -55% 55% -55%)}
-.hero-fracture-word:nth-child(3)::after{clip-path:inset(55% -35% 15% -35%)}
-.hero-fracture-rule{position:absolute;left:-.04em;right:-.04em;top:54%;height:1px;background:var(--sand);opacity:var(--rule-opacity,0);transform:translateX(var(--rule-x,0px)) scaleX(var(--rule-scale,1));transform-origin:center;z-index:1;pointer-events:none}
-@media(max-width:760px){.hero-fracture-word{will-change:auto}.hero-fracture::before{-webkit-text-stroke-width:.8px}}
-@media(prefers-reduced-motion:reduce){.hero-fracture-word{transform:none!important}.hero-fracture-word::after,.hero-fracture::before,.hero-fracture-rule{display:none!important}}
-'''
-
-          css = re.sub(r'/\* homepage hero resolve motion \*/[\s\S]*\Z', new_css, css, count=1)
-
-          new_js = r'''/* homepage hero semantic fracture */
-(()=>{
-  const hero=document.querySelector('.story-hero');
-  const h1=hero?.querySelector('h1');
-  if(!hero||!h1||h1.dataset.fractureReady==='true')return;
-  h1.dataset.fractureReady='true';
-  const target='hard to explain.';
-  const full=h1.textContent||'';
-  const start=full.lastIndexOf(target);
-  if(start<0)return;
-  const before=full.slice(0,start);
-  const after=full.slice(start+target.length);
-  const phrase=document.createElement('span');
-  phrase.className='hero-fracture';
-  phrase.dataset.text=target;
-  phrase.setAttribute('aria-label',target);
-  const rule=document.createElement('span');
-  rule.className='hero-fracture-rule';
-  rule.setAttribute('aria-hidden','true');
-  const words=['hard','to','explain.'].map((word,i)=>{
-    const span=document.createElement('span');
-    span.className='hero-fracture-word';
-    span.dataset.text=word;
-    span.dataset.index=String(i);
-    span.setAttribute('aria-hidden','true');
-    span.textContent=word;
-    phrase.appendChild(span);
-    return span;
-  });
-  phrase.appendChild(rule);
-  h1.replaceChildren(document.createTextNode(before),phrase,document.createTextNode(after));
-
-  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
-  if(reduced.matches)return;
-
-  const desktop=[
-    {x:-78,y:-25,r:-5.2,s:1.035,slice:31},
-    {x:16,y:47,r:6.4,s:.96,slice:-24},
-    {x:98,y:-34,r:-4.1,s:1.025,slice:39}
-  ];
-  let ticking=false;
-
-  const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
-  const smoothstep=t=>t*t*(3-2*t);
-  const render=()=>{
-    ticking=false;
-    const heroTop=hero.offsetTop;
-    const range=Math.max(330,hero.offsetHeight*.94);
-    const progress=clamp((window.scrollY-heroTop+18)/range,0,1);
-    const wave=Math.sin(Math.PI*progress);
-    const intensity=smoothstep(wave);
-    const compact=window.innerWidth<760?.54:1;
-    phrase.style.setProperty('--fracture-ghost',(intensity*.48).toFixed(3));
-    phrase.style.setProperty('--rule-opacity',(intensity*.72).toFixed(3));
-    phrase.style.setProperty('--rule-x',`${((progress-.5)*54*intensity).toFixed(1)}px`);
-    phrase.style.setProperty('--rule-scale',(1+intensity*.24).toFixed(3));
-    words.forEach((word,i)=>{
-      const m=desktop[i];
-      const local=intensity*(1-(i===1?Math.abs(progress-.5)*.08:0));
-      word.style.setProperty('--fx',`${(m.x*compact*local).toFixed(1)}px`);
-      word.style.setProperty('--fy',`${(m.y*compact*local).toFixed(1)}px`);
-      word.style.setProperty('--fr',`${(m.r*local).toFixed(2)}deg`);
-      word.style.setProperty('--fs',(1+(m.s-1)*local).toFixed(4));
-      word.style.setProperty('--slice',`${(m.slice*compact*local).toFixed(1)}px`);
-      word.style.setProperty('--slice-opacity',(local*.82).toFixed(3));
-    });
-  };
-  const queue=()=>{
-    if(ticking)return;
-    ticking=true;
-    requestAnimationFrame(render);
-  };
-  window.addEventListener('scroll',queue,{passive:true});
-  window.addEventListener('resize',queue,{passive:true});
-  render();
-})();
-'''
-          js = re.sub(r'/\* homepage hero resolve motion \*/[\s\S]*\Z', new_js, js, count=1)
-
-          if '/story.css?v=7' not in index:
-              raise SystemExit('Expected homepage story.css version 7 not found')
-          if '/story.js?v=4' not in index:
-              raise SystemExit('Expected homepage story.js version 4 not found')
-          index = index.replace('/story.css?v=7','/story.css?v=8',1)
-          index = index.replace('/story.js?v=4','/story.js?v=5',1)
-
-          css_path.write_text(css,encoding='utf-8')
-          js_path.write_text(js,encoding='utf-8')
-          index_path.write_text(index,encoding='utf-8')
+          css_path=Path('story.css'); js_path=Path('story.js'); index_path=Path('index.html')
+          css=css_path.read_text(encoding='utf-8'); js=js_path.read_text(encoding='utf-8'); index=index_path.read_text(encoding='utf-8')
+          if '/* homepage hero resolve motion */' not in css or '/* homepage hero resolve motion */' not in js:
+              raise SystemExit('Existing hero resolve markers not found')
+          new_css=base64.b64decode(os.environ['NEW_CSS_B64']).decode('utf-8')
+          new_js=base64.b64decode(os.environ['NEW_JS_B64']).decode('utf-8')
+          css=re.sub(r'/\* homepage hero resolve motion \*/[\s\S]*\Z',new_css,css,count=1)
+          js=re.sub(r'/\* homepage hero resolve motion \*/[\s\S]*\Z',new_js,js,count=1)
+          if '/story.css?v=7' not in index or '/story.js?v=4' not in index:
+              raise SystemExit('Unexpected homepage asset versions')
+          index=index.replace('/story.css?v=7','/story.css?v=8',1).replace('/story.js?v=4','/story.js?v=5',1)
+          css_path.write_text(css,encoding='utf-8'); js_path.write_text(js,encoding='utf-8'); index_path.write_text(index,encoding='utf-8')
           PY
 
       - name: Validate semantic fracture
