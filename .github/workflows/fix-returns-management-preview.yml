@@ -1,0 +1,74 @@
+name: Fix Returns Management preview
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-returns-management-preview.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out portfolio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Convert only Returns Management preview
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install sharp >/dev/null 2>&1
+          git show 90b313749ea4735eddb822fc9cacd3dc27944f7a:work-previews/lateshipment-returns-management-software.png > /tmp/returns-management.png
+          node <<'NODE'
+          const sharp = require('sharp');
+          const fs = require('fs');
+          const path = require('path');
+
+          (async () => {
+            const name = 'lateshipment-returns-management-software';
+            const targetWidth = 760;
+            const tileHeight = 1000;
+            const rawPath = '/tmp/returns-management.png';
+
+            const resized = await sharp(rawPath, { limitInputPixels: false })
+              .resize({ width: targetWidth, withoutEnlargement: true })
+              .webp({ quality: 68, effort: 5, smartSubsample: true })
+              .toBuffer();
+
+            const meta = await sharp(resized).metadata();
+            const files = [];
+            for (let top = 0, index = 1; top < meta.height; top += tileHeight, index++) {
+              const height = Math.min(tileHeight, meta.height - top);
+              const filename = `${name}-${String(index).padStart(2, '0')}.webp`;
+              await sharp(resized)
+                .extract({ left: 0, top, width: meta.width, height })
+                .webp({ quality: 68, effort: 5, smartSubsample: true })
+                .toFile(path.join('work-previews', filename));
+              files.push(filename);
+            }
+
+            let html = fs.readFileSync('work.html', 'utf8');
+            const oldBlock = '<div class="page-scroll-frame"><img src="/work-previews/lateshipment-returns-management-software.png" alt="Full-page preview of Returns Management Software article on LateShipment" loading="lazy"></div>';
+            if (!html.includes(oldBlock)) throw new Error('Expected Returns Management preview block was not found');
+            const imgs = files.map((file, index) => `<img src="/work-previews/${file}" alt="${index === 0 ? 'Full-page preview of Returns Management Software article on LateShipment' : ''}" loading="lazy" decoding="async" fetchpriority="low">`).join('');
+            html = html.replace(oldBlock, `<div class="page-scroll-frame page-scroll-tiles">${imgs}</div>`);
+            fs.writeFileSync('work.html', html);
+          })().catch(error => { console.error(error); process.exit(1); });
+          NODE
+
+      - name: Commit this preview only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add work.html work-previews/lateshipment-returns-management-software-*.webp
+          git commit -m "Fix Returns Management work preview"
+          git pull --rebase origin main
+          git push origin HEAD:main
