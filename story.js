@@ -64,3 +64,30 @@ document.addEventListener('DOMContentLoaded',()=>{
   };
   requestAnimationFrame(frame);
 });
+
+
+/* homepage hero resolve motion */
+(()=>{
+  const h1=document.querySelector('.story-hero h1');
+  if(!h1||h1.dataset.resolveReady==='true')return;
+  h1.dataset.resolveReady='true';
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const target='hard to explain.';
+  const full=h1.textContent||'';
+  const start=full.lastIndexOf(target);
+  if(start<0)return;
+  const before=full.slice(0,start);
+  const after=full.slice(start+target.length);
+  const phrase=document.createElement('span');
+  phrase.className='hero-resolve';
+  phrase.setAttribute('aria-label',target);
+  ['hard','to','explain.'].forEach((word,i)=>{
+    const span=document.createElement('span');
+    span.className='hero-resolve-word';
+    span.setAttribute('aria-hidden','true');
+    span.style.setProperty('--hero-i',String(i));
+    span.textContent=word;
+    phrase.appendChild(span);
+  });
+  h1.replaceChildren(document.createTextNode(before),phrase,document.createTextNode(after));
+})();
