@@ -25,7 +25,7 @@ jobs:
           python -m pip install --disable-pip-version-check gdown pypdf
           mkdir -p ebook-previews
           rm -f ebook-previews/meal-plan.pdf
-          gdown --fuzzy "https://drive.google.com/file/d/1azIHW7j73t5n0FUV8sIaSpojdj5aV16k/view?usp=sharing" -O ebook-previews/meal-plan.pdf
+          gdown "1azIHW7j73t5n0FUV8sIaSpojdj5aV16k" -O ebook-previews/meal-plan.pdf
           python - <<'PY'
           from pathlib import Path
           from pypdf import PdfReader
