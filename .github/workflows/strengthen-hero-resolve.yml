@@ -1,0 +1,68 @@
+name: Strengthen homepage hero resolve motion
+
+on:
+  push:
+    paths:
+      - '.github/workflows/strengthen-hero-resolve.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  tune:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Tune hero resolve visibility
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          css_path = Path('story.css')
+          index_path = Path('index.html')
+          css = css_path.read_text(encoding='utf-8')
+          index = index_path.read_text(encoding='utf-8')
+
+          old = '''.hero-resolve-word{display:inline-block;transform-origin:50% 80%;will-change:transform,opacity,filter;animation:hero-resolve-word .92s cubic-bezier(.2,.75,.16,1) both;animation-delay:calc(var(--hero-i) * 72ms)}\n.hero-resolve-word:nth-child(1){--hero-x:-2px;--hero-y:-6px;--hero-r:-.65deg}\n.hero-resolve-word:nth-child(2){--hero-x:1px;--hero-y:4px;--hero-r:.4deg}\n.hero-resolve-word:nth-child(3){--hero-x:2px;--hero-y:-3px;--hero-r:-.28deg}\n.hero-resolve::after{content:"";position:absolute;left:0;right:0;bottom:-.05em;height:1px;background:currentColor;opacity:0;transform:scaleX(0);transform-origin:left center;animation:hero-resolve-baseline 1.02s cubic-bezier(.2,.75,.16,1) .04s both;pointer-events:none}\n@keyframes hero-resolve-word{0%{transform:translate3d(var(--hero-x),var(--hero-y),0) rotate(var(--hero-r));opacity:.56;filter:blur(.45px)}52%{opacity:.92;filter:blur(.08px)}100%{transform:translate3d(0,0,0) rotate(0);opacity:1;filter:blur(0)}}\n@keyframes hero-resolve-baseline{0%{transform:scaleX(0);opacity:0}22%{opacity:.18}70%{transform:scaleX(1);opacity:.18}100%{transform:scaleX(1);opacity:0}}'''
+
+          new = '''.hero-resolve-word{display:inline-block;transform-origin:50% 80%;will-change:transform,opacity,filter;animation:hero-resolve-word 1.28s cubic-bezier(.16,.78,.18,1) both;animation-delay:calc(320ms + (var(--hero-i) * 110ms))}\n.hero-resolve-word:nth-child(1){--hero-x:-5px;--hero-y:-13px;--hero-r:-1.2deg}\n.hero-resolve-word:nth-child(2){--hero-x:3px;--hero-y:9px;--hero-r:.9deg}\n.hero-resolve-word:nth-child(3){--hero-x:7px;--hero-y:-8px;--hero-r:-.7deg}\n.hero-resolve::after{content:"";position:absolute;left:0;right:0;bottom:-.05em;height:1px;background:currentColor;opacity:0;transform:scaleX(0);transform-origin:left center;animation:hero-resolve-baseline 1.34s cubic-bezier(.16,.78,.18,1) .38s both;pointer-events:none}\n@keyframes hero-resolve-word{0%{transform:translate3d(var(--hero-x),var(--hero-y),0) rotate(var(--hero-r));opacity:.22;filter:blur(1.15px)}45%{opacity:.82;filter:blur(.3px)}100%{transform:translate3d(0,0,0) rotate(0);opacity:1;filter:blur(0)}}\n@keyframes hero-resolve-baseline{0%{transform:scaleX(0);opacity:0}18%{opacity:.26}72%{transform:scaleX(1);opacity:.26}100%{transform:scaleX(1);opacity:0}}'''
+
+          if old not in css:
+              raise SystemExit('Expected existing hero resolve CSS block not found')
+          css = css.replace(old, new, 1)
+
+          if '/story.css?v=6' in index:
+              index = index.replace('/story.css?v=6', '/story.css?v=7', 1)
+          elif '/story.css?v=7' not in index:
+              raise SystemExit('Unexpected homepage story.css version')
+
+          css_path.write_text(css, encoding='utf-8')
+          index_path.write_text(index, encoding='utf-8')
+          PY
+
+      - name: Validate tuned motion
+        run: |
+          grep -q 'animation-delay:calc(320ms' story.css
+          grep -q -- '--hero-y:-13px' story.css
+          grep -q 'filter:blur(1.15px)' story.css
+          grep -q '/story.css?v=7' index.html
+
+      - name: Commit tuned hero motion
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          LATEST="$(git rev-parse origin/main)"
+          BASE="$(git rev-parse HEAD)"
+          echo "Latest main SHA: $LATEST"
+          echo "Checked-out SHA: $BASE"
+          if [ "$LATEST" != "$BASE" ]; then
+            echo "main changed while preparing hero tuning; refusing to overwrite it"
+            exit 1
+          fi
+          git add story.css index.html
+          git commit -m "Make homepage hero resolve animation visible"
+          git push origin HEAD:main
