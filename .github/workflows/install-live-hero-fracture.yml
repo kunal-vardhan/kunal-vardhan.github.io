@@ -1,0 +1,166 @@
+name: Install live homepage hero fracture
+
+on:
+  push:
+    paths:
+      - '.github/workflows/install-live-hero-fracture.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Replace scroll fracture with visible live fracture
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          css_path = Path('story.css')
+          js_path = Path('story.js')
+          index_path = Path('index.html')
+
+          css = css_path.read_text(encoding='utf-8')
+          js = js_path.read_text(encoding='utf-8')
+          index = index_path.read_text(encoding='utf-8')
+
+          marker = '/* homepage hero semantic fracture */'
+          if marker not in css or marker not in js:
+              raise SystemExit('Current semantic fracture markers were not found')
+
+          new_css = '''/* homepage hero live fracture */
+          .hero-fracture{position:relative;display:inline-flex;align-items:baseline;gap:.18em;white-space:nowrap;vertical-align:baseline;isolation:isolate;cursor:default}
+          .hero-fracture::before{content:attr(data-text);position:absolute;inset:0;white-space:nowrap;color:transparent;-webkit-text-stroke:1px rgba(104,123,112,.8);opacity:0;pointer-events:none;z-index:0}
+          .hero-fracture-word{position:relative;display:inline-block;z-index:2;transform-origin:50% 70%}
+          .hero-fracture-word:nth-child(1){--fx:-48px;--fy:-18px;--fr:-5deg;--slice:28px}
+          .hero-fracture-word:nth-child(2){--fx:15px;--fy:30px;--fr:6.5deg;--slice:-22px}
+          .hero-fracture-word:nth-child(3){--fx:66px;--fy:-24px;--fr:-4deg;--slice:38px}
+          .hero-fracture-word::after{content:attr(data-text);position:absolute;inset:0;color:var(--ink);clip-path:inset(34% -55% 32% -55%);transform:translateX(0);opacity:0;pointer-events:none;z-index:4}
+          .hero-fracture-word:nth-child(2)::after{clip-path:inset(15% -65% 58% -65%)}
+          .hero-fracture-word:nth-child(3)::after{clip-path:inset(57% -40% 12% -40%)}
+          .hero-fracture-rule{position:absolute;left:-.08em;right:-.08em;top:54%;height:2px;background:var(--sand);opacity:0;transform-origin:left center;pointer-events:none;z-index:1}
+          .hero-fracture.is-live .hero-fracture-word{will-change:transform;animation:hero-live-fracture 3.8s cubic-bezier(.18,.78,.18,1) .35s infinite both}
+          .hero-fracture.is-live .hero-fracture-word:nth-child(2){animation-delay:.43s}
+          .hero-fracture.is-live .hero-fracture-word:nth-child(3){animation-delay:.39s}
+          .hero-fracture.is-live .hero-fracture-word::after{animation:hero-live-slice 3.8s cubic-bezier(.18,.78,.18,1) .35s infinite both}
+          .hero-fracture.is-live .hero-fracture-word:nth-child(2)::after{animation-delay:.43s}
+          .hero-fracture.is-live .hero-fracture-word:nth-child(3)::after{animation-delay:.39s}
+          .hero-fracture.is-live::before{animation:hero-live-ghost 3.8s ease .35s infinite both}
+          .hero-fracture.is-live .hero-fracture-rule{animation:hero-live-rule 3.8s cubic-bezier(.18,.78,.18,1) .35s infinite both}
+          .hero-fracture.is-kick .hero-fracture-word{animation:hero-kick-fracture .88s cubic-bezier(.16,.84,.16,1) both!important}
+          .hero-fracture.is-kick .hero-fracture-word:nth-child(2){animation-delay:.045s!important}
+          .hero-fracture.is-kick .hero-fracture-word:nth-child(3){animation-delay:.02s!important}
+          .hero-fracture.is-kick .hero-fracture-word::after{animation:hero-kick-slice .88s cubic-bezier(.16,.84,.16,1) both!important}
+          .hero-fracture.is-kick::before{animation:hero-kick-ghost .88s ease both!important}
+          .hero-fracture.is-kick .hero-fracture-rule{animation:hero-kick-rule .88s cubic-bezier(.16,.84,.16,1) both!important}
+          @keyframes hero-live-fracture{0%,11%,50%,100%{transform:none}18%{transform:translate3d(calc(var(--fx)*.45),calc(var(--fy)*.45),0) rotate(calc(var(--fr)*.45))}25%{transform:translate3d(var(--fx),var(--fy),0) rotate(var(--fr)) scale(1.025)}31%{transform:translate3d(calc(var(--fx)*.78),calc(var(--fy)*1.12),0) rotate(calc(var(--fr)*1.18))}39%{transform:translate3d(calc(var(--fx)*-.12),calc(var(--fy)*-.08),0) rotate(calc(var(--fr)*-.16))}45%{transform:none}}
+          @keyframes hero-live-slice{0%,13%,43%,100%{opacity:0;transform:translateX(0)}20%{opacity:.9;transform:translateX(calc(var(--slice)*.55))}27%{opacity:1;transform:translateX(var(--slice))}34%{opacity:.68;transform:translateX(calc(var(--slice)*-.38))}}
+          @keyframes hero-live-ghost{0%,12%,45%,100%{opacity:0}20%{opacity:.34}28%{opacity:.72}37%{opacity:.22}}
+          @keyframes hero-live-rule{0%,14%,43%,100%{opacity:0;transform:translateX(-15%) scaleX(.15)}22%{opacity:.85;transform:translateX(0) scaleX(1.12)}31%{opacity:.5;transform:translateX(14%) scaleX(.72)}}
+          @keyframes hero-kick-fracture{0%,100%{transform:none}38%{transform:translate3d(var(--fx),var(--fy),0) rotate(var(--fr)) scale(1.035)}62%{transform:translate3d(calc(var(--fx)*.6),calc(var(--fy)*-.35),0) rotate(calc(var(--fr)*-.7))}}
+          @keyframes hero-kick-slice{0%,100%{opacity:0;transform:translateX(0)}34%{opacity:1;transform:translateX(var(--slice))}62%{opacity:.75;transform:translateX(calc(var(--slice)*-.5))}}
+          @keyframes hero-kick-ghost{0%,100%{opacity:0}38%{opacity:.78}65%{opacity:.28}}
+          @keyframes hero-kick-rule{0%,100%{opacity:0;transform:translateX(-18%) scaleX(.1)}42%{opacity:.95;transform:translateX(0) scaleX(1.18)}68%{opacity:.35;transform:translateX(18%) scaleX(.62)}}
+          @media(max-width:760px){.hero-fracture-word:nth-child(1){--fx:-27px;--fy:-12px}.hero-fracture-word:nth-child(2){--fx:9px;--fy:18px}.hero-fracture-word:nth-child(3){--fx:36px;--fy:-15px}.hero-fracture-rule{height:1px}.hero-fracture::before{-webkit-text-stroke-width:.8px}}
+          @media(prefers-reduced-motion:reduce){.hero-fracture-word,.hero-fracture-word::after,.hero-fracture::before,.hero-fracture-rule{animation:none!important;transform:none!important;opacity:1}.hero-fracture-word::after,.hero-fracture::before,.hero-fracture-rule{display:none!important}}
+          '''
+          css = re.sub(r'/\* homepage hero semantic fracture \*/[\s\S]*\Z', new_css, css, count=1)
+
+          new_js = '''/* homepage hero live fracture */
+          (()=>{
+            const hero=document.querySelector('.story-hero');
+            const h1=hero?.querySelector('h1');
+            if(!hero||!h1||h1.dataset.fractureReady==='true')return;
+            h1.dataset.fractureReady='true';
+            const target='hard to explain.';
+            const full=h1.textContent||'';
+            const start=full.lastIndexOf(target);
+            if(start<0)return;
+            const phrase=document.createElement('span');
+            phrase.className='hero-fracture';
+            phrase.dataset.text=target;
+            phrase.setAttribute('aria-label',target);
+            const words=['hard','to','explain.'];
+            words.forEach(word=>{
+              const span=document.createElement('span');
+              span.className='hero-fracture-word';
+              span.dataset.text=word;
+              span.setAttribute('aria-hidden','true');
+              span.textContent=word;
+              phrase.appendChild(span);
+            });
+            const rule=document.createElement('span');
+            rule.className='hero-fracture-rule';
+            rule.setAttribute('aria-hidden','true');
+            phrase.appendChild(rule);
+            h1.replaceChildren(document.createTextNode(full.slice(0,start)),phrase,document.createTextNode(full.slice(start+target.length)));
+
+            if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+            const setLive=visible=>phrase.classList.toggle('is-live',visible);
+            if('IntersectionObserver' in window){
+              const observer=new IntersectionObserver(entries=>setLive(entries[0]?.isIntersecting===true),{threshold:.18});
+              observer.observe(hero);
+            }else{
+              setLive(true);
+            }
+            let kickTimer=0;
+            const kick=()=>{
+              window.clearTimeout(kickTimer);
+              phrase.classList.remove('is-kick');
+              void phrase.offsetWidth;
+              phrase.classList.add('is-kick');
+              kickTimer=window.setTimeout(()=>phrase.classList.remove('is-kick'),980);
+            };
+            if(window.matchMedia('(hover:hover) and (pointer:fine)').matches){
+              phrase.addEventListener('pointerenter',kick);
+            }
+            phrase.addEventListener('pointerdown',kick,{passive:true});
+          })();
+          '''
+          js = re.sub(r'/\* homepage hero semantic fracture \*/[\s\S]*\Z', new_js, js, count=1)
+
+          if '/story.css?v=8' not in index or '/story.js?v=5' not in index:
+              raise SystemExit('Unexpected homepage asset versions')
+          index = index.replace('/story.css?v=8','/story.css?v=9',1)
+          index = index.replace('/story.js?v=5','/story.js?v=6',1)
+
+          css_path.write_text(css,encoding='utf-8')
+          js_path.write_text(js,encoding='utf-8')
+          index_path.write_text(index,encoding='utf-8')
+          PY
+
+      - name: Validate live fracture
+        run: |
+          ! grep -q 'homepage hero semantic fracture' story.css
+          ! grep -q 'homepage hero semantic fracture' story.js
+          grep -q 'homepage hero live fracture' story.css
+          grep -q 'homepage hero live fracture' story.js
+          grep -q 'IntersectionObserver' story.js
+          grep -q 'pointerenter' story.js
+          grep -q '3.8s' story.css
+          grep -q '/story.css?v=9' index.html
+          grep -q '/story.js?v=6' index.html
+          grep -q '<strong>5 years</strong>' index.html
+
+      - name: Commit live fracture
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          LATEST="$(git rev-parse origin/main)"
+          BASE="$(git rev-parse HEAD)"
+          echo "Latest main SHA: $LATEST"
+          echo "Checked-out SHA: $BASE"
+          if [ "$LATEST" != "$BASE" ]; then
+            echo "main changed while preparing live hero fracture; refusing to overwrite it"
+            exit 1
+          fi
+          git add story.css story.js index.html
+          git commit -m "Make homepage hero fracture continuously visible"
+          git push origin HEAD:main
