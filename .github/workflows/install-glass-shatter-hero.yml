@@ -20,7 +20,7 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          import re
+          import re, base64
 
           css_path = Path('story.css')
           js_path = Path('story.js')
@@ -33,148 +33,10 @@ jobs:
           if marker not in css or marker not in js:
               raise SystemExit('Current live hero fracture marker not found')
 
-          new_css = r'''/* homepage hero glass shatter */
-.hero-shatter{position:relative;display:inline-block;white-space:nowrap;vertical-align:baseline;isolation:isolate;cursor:default}
-.hero-shatter-base{position:relative;z-index:1;display:inline-block}
-.hero-shatter::after{content:attr(data-text);position:absolute;inset:0;color:transparent;-webkit-text-stroke:1px rgba(104,123,112,.78);opacity:0;z-index:0;pointer-events:none}
-.hero-shatter-shard{position:absolute;inset:0;z-index:4;display:block;opacity:0;clip-path:var(--clip);transform-origin:var(--ox,50%) var(--oy,50%);pointer-events:none}
-.hero-shatter-impact{position:absolute;inset:-18% -9%;z-index:6;opacity:0;pointer-events:none}
-.hero-shatter-impact::before,.hero-shatter-impact::after{content:"";position:absolute;left:8%;top:50%;width:92%;height:1px;background:var(--sand);transform-origin:center}
-.hero-shatter-impact::before{transform:rotate(-11deg) scaleX(.08)}
-.hero-shatter-impact::after{transform:rotate(7deg) scaleX(.06)}
-.hero-shatter-debris{position:absolute;left:var(--left);top:var(--top);z-index:5;width:var(--w);height:var(--h);background:var(--ink);opacity:0;transform-origin:center;pointer-events:none}
-.hero-shatter-debris:nth-of-type(even){background:var(--sand)}
-.hero-shatter.is-shattering .hero-shatter-base{animation:hero-shatter-base 1.58s cubic-bezier(.18,.76,.16,1) both}
-.hero-shatter.is-shattering::after{animation:hero-shatter-ghost 1.58s ease both}
-.hero-shatter.is-shattering .hero-shatter-shard{animation:hero-shard-flight 1.58s cubic-bezier(.16,.82,.16,1) var(--delay,0ms) both}
-.hero-shatter.is-shattering .hero-shatter-impact{animation:hero-impact-flash 1.58s ease both}
-.hero-shatter.is-shattering .hero-shatter-debris{animation:hero-debris-flight 1.42s cubic-bezier(.15,.78,.14,1) var(--delay,0ms) both}
-@keyframes hero-shatter-base{0%,8%{opacity:1}15%{opacity:.08}58%{opacity:.08}87%,100%{opacity:1}}
-@keyframes hero-shatter-ghost{0%,9%,91%,100%{opacity:0}16%{opacity:.24}31%{opacity:.72}58%{opacity:.48}80%{opacity:.15}}
-@keyframes hero-shard-flight{0%,7%{opacity:0;transform:none}10%{opacity:1;transform:none}31%{opacity:1;transform:translate3d(var(--dx),var(--dy),0) rotate(var(--rot)) scale(var(--scale,1.02))}54%{opacity:1;transform:translate3d(var(--dx),var(--dy),0) rotate(var(--rot)) scale(var(--scale,1.02))}72%{opacity:1;transform:translate3d(calc(var(--dx)*.34),calc(var(--dy)*.22),0) rotate(calc(var(--rot)*-.38)) scale(.995)}91%{opacity:1;transform:none}100%{opacity:0;transform:none}}
-@keyframes hero-impact-flash{0%,7%,28%,100%{opacity:0}10%{opacity:1}13%{opacity:.82}18%{opacity:.18}}
-@keyframes hero-debris-flight{0%,9%{opacity:0;transform:translate3d(0,0,0) rotate(0)}15%{opacity:.95}38%{opacity:1;transform:translate3d(var(--dx),var(--dy),0) rotate(var(--rot))}63%{opacity:.78;transform:translate3d(calc(var(--dx)*.72),calc(var(--dy)*.85),0) rotate(calc(var(--rot)*1.3))}91%,100%{opacity:0;transform:translate3d(0,0,0) rotate(0)}}
-@media(max-width:760px){.hero-shatter{--mobile:.62}.hero-shatter-shard,.hero-shatter-debris{will-change:auto}.hero-shatter::after{-webkit-text-stroke-width:.8px}}
-@media(prefers-reduced-motion:reduce){.hero-shatter-base{opacity:1!important;animation:none!important}.hero-shatter::after,.hero-shatter-shard,.hero-shatter-impact,.hero-shatter-debris{display:none!important}}
-'''
-          css = re.sub(r'/\* homepage hero live fracture \*/[\s\S]*\Z', new_css, css, count=1)
-
-          new_js = r'''/* homepage hero glass shatter */
-(()=>{
-  const hero=document.querySelector('.story-hero');
-  const h1=hero?.querySelector('h1');
-  if(!hero||!h1||h1.dataset.shatterReady==='true')return;
-  h1.dataset.shatterReady='true';
-  const target='hard to explain.';
-  const full=h1.textContent||'';
-  const start=full.lastIndexOf(target);
-  if(start<0)return;
-
-  const phrase=document.createElement('span');
-  phrase.className='hero-shatter';
-  phrase.dataset.text=target;
-  const base=document.createElement('span');
-  base.className='hero-shatter-base';
-  base.textContent=target;
-  phrase.appendChild(base);
-
-  const shards=[
-    ['polygon(0 0,31% 0,27% 42%,0 56%)','-52px','-34px','-8deg','1.035','0ms','24%','34%'],
-    ['polygon(31% 0,64% 0,57% 46%,27% 42%)','14px','-48px','6deg','1.02','22ms','48%','28%'],
-    ['polygon(64% 0,100% 0,100% 38%,57% 46%)','72px','-28px','8deg','1.04','10ms','70%','30%'],
-    ['polygon(0 56%,27% 42%,45% 63%,25% 100%,0 100%)','-64px','24px','7deg','1.025','36ms','22%','72%'],
-    ['polygon(27% 42%,57% 46%,72% 68%,45% 63%)','-8px','9px','-11deg','1.08','54ms','50%','53%'],
-    ['polygon(57% 46%,100% 38%,100% 77%,72% 68%)','82px','18px','-7deg','1.03','30ms','77%','58%'],
-    ['polygon(25% 100%,45% 63%,72% 68%,61% 100%)','-10px','47px','9deg','1.025','44ms','49%','82%'],
-    ['polygon(61% 100%,72% 68%,100% 77%,100% 100%)','56px','43px','12deg','1.04','18ms','82%','84%']
-  ];
-  shards.forEach(([clip,dx,dy,rot,scale,delay,ox,oy])=>{
-    const shard=document.createElement('span');
-    shard.className='hero-shatter-shard';
-    shard.textContent=target;
-    shard.setAttribute('aria-hidden','true');
-    shard.style.setProperty('--clip',clip);
-    shard.style.setProperty('--dx',dx);
-    shard.style.setProperty('--dy',dy);
-    shard.style.setProperty('--rot',rot);
-    shard.style.setProperty('--scale',scale);
-    shard.style.setProperty('--delay',delay);
-    shard.style.setProperty('--ox',ox);
-    shard.style.setProperty('--oy',oy);
-    phrase.appendChild(shard);
-  });
-
-  const impact=document.createElement('span');
-  impact.className='hero-shatter-impact';
-  impact.setAttribute('aria-hidden','true');
-  phrase.appendChild(impact);
-
-  const debris=[
-    ['12%','24%','6px','2px','-38px','-31px','-34deg','20ms'],
-    ['24%','72%','4px','2px','-52px','25px','41deg','34ms'],
-    ['38%','18%','7px','1px','-12px','-43px','18deg','12ms'],
-    ['49%','66%','5px','2px','11px','38px','-47deg','46ms'],
-    ['62%','34%','8px','2px','36px','-27px','33deg','26ms'],
-    ['73%','76%','4px','2px','48px','34px','61deg','38ms'],
-    ['84%','22%','6px','1px','59px','-36px','-22deg','16ms'],
-    ['92%','58%','5px','2px','67px','15px','49deg','42ms']
-  ];
-  debris.forEach(([left,top,w,h,dx,dy,rot,delay])=>{
-    const bit=document.createElement('span');
-    bit.className='hero-shatter-debris';
-    bit.setAttribute('aria-hidden','true');
-    bit.style.setProperty('--left',left);
-    bit.style.setProperty('--top',top);
-    bit.style.setProperty('--w',w);
-    bit.style.setProperty('--h',h);
-    bit.style.setProperty('--dx',dx);
-    bit.style.setProperty('--dy',dy);
-    bit.style.setProperty('--rot',rot);
-    bit.style.setProperty('--delay',delay);
-    phrase.appendChild(bit);
-  });
-
-  h1.replaceChildren(document.createTextNode(full.slice(0,start)),phrase,document.createTextNode(full.slice(start+target.length)));
-  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-
-  let visible=false;
-  let timer=0;
-  let resetTimer=0;
-  const clearSchedule=()=>{window.clearTimeout(timer);timer=0;};
-  const trigger=()=>{
-    if(!visible||phrase.classList.contains('is-shattering'))return;
-    phrase.classList.remove('is-shattering');
-    void phrase.offsetWidth;
-    phrase.classList.add('is-shattering');
-    window.clearTimeout(resetTimer);
-    resetTimer=window.setTimeout(()=>phrase.classList.remove('is-shattering'),1750);
-  };
-  const schedule=(delay=4300)=>{
-    clearSchedule();
-    if(!visible||document.hidden)return;
-    timer=window.setTimeout(()=>{
-      trigger();
-      schedule(4800);
-    },delay);
-  };
-  const setVisible=value=>{
-    visible=value;
-    if(visible)schedule(1500);
-    else{clearSchedule();phrase.classList.remove('is-shattering');}
-  };
-  if('IntersectionObserver' in window){
-    const observer=new IntersectionObserver(entries=>setVisible(entries[0]?.intersectionRatio>=.72),{threshold:[0,.72,1]});
-    observer.observe(phrase);
-  }else{
-    setVisible(true);
-  }
-  document.addEventListener('visibilitychange',()=>{if(document.hidden)clearSchedule();else if(visible)schedule(1200);});
-  const manual=()=>{if(!visible)return;trigger();schedule(5200);};
-  if(window.matchMedia('(hover:hover) and (pointer:fine)').matches)phrase.addEventListener('pointerenter',manual);
-  phrase.addEventListener('pointerdown',manual,{passive:true});
-})();
-'''
-          js = re.sub(r'/\* homepage hero live fracture \*/[\s\S]*\Z', new_js, js, count=1)
+          new_css = base64.b64decode('LyogaG9tZXBhZ2UgaGVybyBnbGFzcyBzaGF0dGVyICovCi5oZXJvLXNoYXR0ZXJ7cG9zaXRpb246cmVsYXRpdmU7ZGlzcGxheTppbmxpbmUtYmxvY2s7d2hpdGUtc3BhY2U6bm93cmFwO3ZlcnRpY2FsLWFsaWduOmJhc2VsaW5lO2lzb2xhdGlvbjppc29sYXRlO2N1cnNvcjpkZWZhdWx0fQouaGVyby1zaGF0dGVyLWJhc2V7cG9zaXRpb246cmVsYXRpdmU7ei1pbmRleDoxO2Rpc3BsYXk6aW5saW5lLWJsb2NrfQouaGVyby1zaGF0dGVyOjphZnRlcntjb250ZW50OmF0dHIoZGF0YS10ZXh0KTtwb3NpdGlvbjphYnNvbHV0ZTtpbnNldDowO2NvbG9yOnRyYW5zcGFyZW50Oy13ZWJraXQtdGV4dC1zdHJva2U6MXB4IHJnYmEoMTA0LDEyMywxMTIsLjc4KTtvcGFjaXR5OjA7ei1pbmRleDowO3BvaW50ZXItZXZlbnRzOm5vbmV9Ci5oZXJvLXNoYXR0ZXItc2hhcmR7cG9zaXRpb246YWJzb2x1dGU7aW5zZXQ6MDt6LWluZGV4OjQ7ZGlzcGxheTpibG9jaztvcGFjaXR5OjA7Y2xpcC1wYXRoOnZhcigtLWNsaXApO3RyYW5zZm9ybS1vcmlnaW46dmFyKC0tb3gsNTAlKSB2YXIoLS1veSw1MCUpO3BvaW50ZXItZXZlbnRzOm5vbmV9Ci5oZXJvLXNoYXR0ZXItaW1wYWN0e3Bvc2l0aW9uOmFic29sdXRlO2luc2V0Oi0xOCUgLTklO3otaW5kZXg6NjtvcGFjaXR5OjA7cG9pbnRlci1ldmVudHM6bm9uZX0KLmhlcm8tc2hhdHRlci1pbXBhY3Q6OmJlZm9yZSwuZXJvLXNoYXR0ZXItaW1wYWN0OjphZnRlcntjb250ZW50OiIiO3Bvc2l0aW9uOmFic29sdXRlO2xlZnQ6OCU7dG9wOjUwJTt3aWR0aDo5MiU7aGVpZ2h0OjFweDtiYWNrZ3JvdW5kOnZhcigtLXNhbmQpO3RyYW5zZm9ybS1vcmlnaW46Y2VudGVyfQouaGVyby1zaGF0dGVyLWltcGFjdDo6YmVmb3Jle3RyYW5zZm9ybTpyb3RhdGUoLTExZGVnKSBzY2FsZVgoLjA4KX0KLmhlcm8tc2hhdHRlci1pbXBhY3Q6OmFmdGVye3RyYW5zZm9ybTpyb3RhdGUoN2RlZykgc2NhbGVYK C4wNil9Ci5oZXJvLXNoYXR0ZXItZGVicmlze3Bvc2l0aW9uOmFic29sdXRlO2xlZnQ6dmFyKC0tbGVmdCk7dG9wOnZhcigtLXRvcCk7ei1pbmRleDo1O3dpZHRoOnZhcigtLXcpO2hlaWdodDp2YXIoLS1oKTtiYWNrZ3JvdW5kOnZhcigtLWluayk7b3BhY2l0eTowO3RyYW5zZm9ybS1vcmlnaW46Y2VudGVyO3BvaW50ZXItZXZlbnRzOm5vbmV9Ci5oZXJvLXNoYXR0ZXItZGVicmlzOm50aC1vZi10eXBlKGV2ZW4pe2JhY2tncm91bmQ6dmFyKC0tc2FuZCl9Ci5oZXJvLXNoYXR0ZXIuaXMtc2hhdHRlcmluZyAuaGVyby1zaGF0dGVyLWJhc2V7YW5pbWF0aW9uOmhlcm8tc2hhdHRlci1iYXNlIDEuNThzIGN1YmljLWJlemllciguMTgsLjc2LC4xNiwxKSBib3RofQouaGVyby1zaGF0dGVyLmlzLXNoYXR0ZXJpbmc6OmFmdGVye2FuaW1hdGlvbjpoZXJvLXNoYXR0ZXItZ2hvc3QgMS41OHMgZWFzZSBib3RofQouaGVyby1zaGF0dGVyLmlzLXNoYXR0ZXJpbmcgLmhlcm8tc2hhdHRlci1zaGFyZHthbmltYXRpb246aGVyby1zaGFyZC1mbGlnaHQgMS41OHMgY3ViaWMtYmV6aWVyKC4xNiwuODIsLjE2LDEpIHZhcigtLWRlbGF5LDBtcykgYm90aH0KLmhlcm8tc2hhdHRlci5pcy1zaGF0dGVyaW5nIC5oZXJvLXNoYXR0ZXItaW1wYWN0e2FuaW1hdGlvbjpoZXJvLWltcGFjdC1mbGFzaCAxLjU4cyBlYXNlIGJvdGh9Ci5oZXJvLXNoYXR0ZXIuaXMtc2hhdHRlcmluZyAuaGVyby1zaGF0dGVyLWRlYnJpc3thbmltYXRpb246aGVyby1kZWJyaXMtZmxpZ2h0IDEuNDJzIGN1YmljLWJlemllciguMTUsLjc4LC4xNCwxKSB2YXIoLS1kZWxheSwwbXMpIGJvdGh9CkBrZXlmcmFtZXMgaGVyby1zaGF0dGVyLWJhc2V7MCUsOCV7b3BhY2l0eToxfTE1JXtvcGFjaXR5Oi4wOH01OCV7b3BhY2l0eTouMDh9ODclLDEwMCV7b3BhY2l0eToxfX0KQGtleWZyYW1lcyBoZXJvLXNoYXR0ZXItZ2hvc3R7MCUsOSUsOTElLDEwMCV7b3BhY2l0eTowfTE2JXtvcGFjaXR5Oi4yNH0zMSV7b3BhY2l0eTouNzJ9NTgle29wYWNpdHk6LjQ4fTgwJXtvcGFjaXR5Oi4xNX19CkBrZXlmcmFtZXMgaGVyby1zaGFyZC1mbGlnaHR7MCUsNyV7b3BhY2l0eTowO3RyYW5zZm9ybTpub25lfTEwJXtvcGFjaXR5OjE7dHJhbnNmb3JtOm5vbmV9MzEle29wYWNpdHk6MTt0cmFuc2Zvcm06dHJhbnNsYXRlM2QodmFyKC0tZHgpLHZhcigtLWR5KSwwKSByb3RhdGUodmFyKC0tcm90KSkgc2NhbGUodmFyKC0tc2NhbGUsMS4wMikpfTU0JXtvcGFjaXR5OjE7dHJhbnNmb3JtOnRyYW5zbGF0ZTNkKHZhcigtLWR4KSx2YXIoLS1keSksMCkgcm90YXRlKHZhcigtLXJvdCkpIHNjYWxlKHZhcigtLXNjYWxlLDEuMDIpKX03MiV7b3BhY2l0eToxO3RyYW5zZm9ybTp0cmFuc2xhdGUzZChjYWxjKHZhcigtLWR4KSouMzQpLGNhbGModmFyKC0tZHkpKi4yMiksMCkgcm90YXRlKGNhbGModmFyKC0tcm90KSotLjM4KSkgc2NhbGUoLjk5NSl9OTEle29wYWNpdHk6MTt0cmFuc2Zvcm06bm9uZX0xMDAlle29wYWNpdHk6MDt0cmFuc2Zvcm06bm9uZX19CkBrZXlmcmFtZXMgaGVyby1pbXBhY3QtZmxhc2h7MCUsNyUsMjglLDEwMCV7b3BhY2l0eTowfTEwJXtvcGFjaXR5OjF9MTMle29wYWNpdHk6LjgyfTE4JXtvcGFjaXR5Oi4xOH19CkBrZXlmcmFtZXMgaGVyby1kZWJyaXMtZmxpZ2h0ezAlLDkle29wYWNpdHk6MDt0cmFuc2Zvcm06dHJhbnNsYXRlM2QoMCwwLDApIHJvdGF0ZSgwKX0xNSV7b3BhY2l0eTouOTV9Mzgle29wYWNpdHk6MTt0cmFuc2Zvcm06dHJhbnNsYXRlM2QodmFyKC0tZHgpLHZhcigtLWR5KSwwKSByb3RhdGUodmFyKC0tcm90KSl9NjMle29wYWNpdHk6Ljc4O3RyYW5zZm9ybTp0cmFuc2xhdGUzZChjYWxjKHZhcigtLWR4KSouNzIpLGNhbGModmFyKC0tZHkpKi44NSksMCkgcm90YXRlKGNhbGModmFyKC0tcm90KSoxLjMpKX05MSUsMTAwJXtvcGFjaXR5OjA7dHJhbnNmb3JtOnRyYW5zbGF0ZTNkKDAsMCwwKSByb3RhdGUoMCl9fQpAbWVkaWEobWF4LXdpZHRoOjc2MHB4KXsuaGVyby1zaGF0dGVyey0tbW9iaWxlOi42Mn0uaGVyby1zaGF0dGVyLXNoYXJkLC5oZXJvLXNoYXR0ZXItZGVicmlze3dpbGwtY2hhbmdlOmF1dG99Lmhlcm8tc2hhdHRlcjo6YWZ0ZXJ7LXdlYmtpdC10ZXh0LXN0cm9rZS13aWR0aDouOHB4fX0KQG1lZGlhKHByZWZlcnMtcmVkdWNlZC1tb3Rpb246cmVkdWNlKXsuaGVyby1zaGF0dGVyLWJhc2V7b3BhY2l0eToxIWltcG9ydGFudDthbmltYXRpb246bm9uZSFpbXBvcnRhbnR9Lmhlcm8tc2hhdHRlcjo6YWZ0ZXIsLmhlcm8tc2hhdHRlci1zaGFyZCwuaGVyby1zaGF0dGVyLWltcGFjdCwuaGVyby1zaGF0dGVyLWRlYnJpc3tkaXNwbGF5Om5vbmUhaW1wb3J0YW50fX0K'.replace(' ', '')).decode('utf-8')
+          new_js = base64.b64decode('LyogaG9tZXBhZ2UgaGVybyBnbGFzcyBzaGF0dGVyICovCigoKT0+ewogIGNvbnN0IGhlcm89ZG9jdW1lbnQucXVlcnlTZWxlY3RvcignLnN0b3J5LWhlcm8nKTsKICBjb25zdCBoMT1oZXJvPy5xdWVyeVNlbGVjdG9yKCdoMScpOwogIGlmKCFoZXJvfHwhaDF8fGgxLmRhdGFzZXQuc2hhdHRlclJlYWR5PT09J3RydWUnKXJldHVybjsKICBoMS5kYXRhc2V0LnNoYXR0ZXJSZWFkeT0ndHJ1ZSc7CiAgY29uc3QgdGFyZ2V0PSdoYXJkIHRvIGV4cGxhaW4uJzsKICBjb25zdCBmdWxsPWgxLnRleHRDb250ZW50fHwnJzsKICBjb25zdCBzdGFydD1mdWxsLmxhc3RJbmRleE9mKHRhcmdldCk7CiAgaWYoc3RhcnQ8MCl yZXR1cm47CgogIGNvbnN0IHBocmFzZT1kb2N1bWVudC5jcmVhdGVFbGVtZW50KCdzcGFuJyk7CiAgcGhyYXNlLmNsYXNzTmFtZT0naGVyby1zaGF0dGVyJzsKICBwaHJhc2UuZGF0YXNldC50ZXh0PXRhcmdldDsKICBjb25zdCBiYXNlPWRvY3VtZW50LmNyZWF0ZUVsZW1lbnQoJ3NwYW4nKTsKICBiYXNlLmNsYXNzTmFtZT0naGVyby1zaGF0dGVyLWJhc2UnOwogIGJhc2UudGV4dENvbnRlbnQ9dGFyZ2V0OwogIHBocmFzZS5hcHBlbmRDaGlsZChiYXNlKTsKCiAgY29uc3Qgc2hhcmRzPVsKICAgIFsncG9seWdvbigwIDAsMzElIDAsMjclIDQyJSwwIDU2JSknLCctNTJweCcsJy0zNHB4JywnLThkZWcnLCcxLjAzNScsJzBtcycsJzI0JScsJzM0JSddLAogICAgWydwb2x5Z29uKDMxJSAwLDY0JSAwLDU3JSA0NiUsMjclIDQyJSknLCcxNHB4JywnLTQ4cHgnLCc2ZGVnJywnMS4wMicsJzIybXMnLCc0OCUnLCcyOCUnXSwKICAgIFsncG9seWdvbig2NCUgMCwxMDAlIDAsMTAwJSAzOCUsNTclIDQ2JSknLCc3MnB4JywnLTI4cHgnLCc4ZGVnJywnMS4wNCcsJzEwbXMnLCc3MCUnLCczMCUnXSwKICAgIFsncG9seWdvbigwIDU2JSwyNyUgNDIlLDQ1JSA2MyUsMjUlIDEwMCUsMCAxMDAlKScsJy02NHB4JywnMjRweCcsJzdkZWcnLCcxLjAyNScsJzM2bXMnLCcyMiUnLCc3MiUnXSwKICAgIFsncG9seWdvbigyNyUgNDIlLDU3JSA0NiUsNzIlIDY4JSw0NSUgNjMlKScsJy04cHgnLCc5cHgnLCctMTFkZWcnLCcxLjA4JywnNTRtcycsJzUwJScsJzUzJSddLAogICAgWydwb2x5Z29uKDU3JSA0NiUsMTAwJSAzOCUsMTAwJSA3NyUsNzIlIDY4JSknLCc4MnB4JywnMThweCcsJy03ZGVnJywnMS4wMycsJzMwbXMnLCc3NyUnLCc1OCUnXSwKICAgIFsncG9seWdvbigyNSUgMTAwJSw0NSUgNjMlLDcyJSA2OCUsNjElIDEwMCUpJywnLTEwcHgnLCc0N3B4JywnOWRlZycsJzEuMDI1JywnNDRtcycsJzQ5JScsJzgyJSddLAogICAgWydwb2x5Z29uKDYxJSAxMDAlLDcyJSA2OCUsMTAwJSA3NyUsMTAwJSAxMDAlKScsJzU2cHgnLCc0M3B4JywnMTJkZWcnLCcxLjA0JywnMTh tcycsJzgyJScsJzg0JSddCiAgXTsKICBzaGFyZHMuZm9yRWFjaCgoW2NsaXAsZHgsZHkscm90LHNjYWxlLGRlbGF5LG94LG95XSk9PnsKICAgIGNvbnN0IHNoYXJkPWRvY3VtZW50LmNyZWF0ZUVsZW1lbnQoJ3NwYW4nKTsKICAgIHNoYXJkLmNsYXNzTmFtZT0naGVyby1zaGF0dGVyLXNoYXJkJzsKICAgIHNoYXJkLnRleHRDb250ZW50PXRhcmdldDsKICAgIHNoYXJkLnNldEF0dHJpYnV0ZSgnYXJpYS1oaWRkZW4nLCd0cnVlJyk7CiAgICBzaGFyZC5zdHlsZS5zZXRQcm9wZXJ0eSgnLS1jbGlwJyxjbGlwKTsKICAgIHNoYXJkLnN0eWxlLnNldFByb3BlcnR5KCctLWR4JyxkeCk7CiAgICBzaGFyZC5zdHlsZS5zZXRQcm9wZXJ0eSgnLS1keScsZHkpOwogICAgc2hhcmQuc3R5bGUuc2V0UHJvcGVydHkoJy0tcm90Jyxyb3QpOwogICAgc2hhcmQuc3R5bGUuc2V0UHJvcGVydHkoJy0tc2NhbGUnLHNjYWxlKTsKICAgIHNoYXJkLnN0eWxlLnNldFByb3BlcnR5KCctLWRlbGF5JyxkZWxheSk7CiAgICBzaGFyZC5zdHlsZS5zZXRQcm9wZXJ0eSgnLS1veCcsb3gpOwogICAgc2hhcmQuc3R5bGUuc2V0UHJvcGVydHkoJy0tb3knLG95KTsKICAgIHBocmFzZS5hcHBlbmRDaGlsZChzaGFyZCk7CiAgfSk7CgogIGNvbnN0IGltcGFjdD1kb2N1bWVudC5jcmVhdGVFbGVtZW50KCdzcGFuJyk7CiAgaW1wYWN0LmNsYXNzTmFtZT0naGVyby1zaGF0dGVyLWltcGFjdCc7CiAgaW1wYWN0LnNldEF0dHJpYnV0ZSgnYXJpYS1oaWRkZW4nLCd0cnVlJyk7CiAgcGhyYXNlLmFwcGVuZENoaWxkKGltcGFjdCk7CgogIGNvbnN0IGRlYnJpcz1bCiAgICBbJzEyJScsJzI0JScsJzZweCcsJzJweCcsJy0zOHB4JywnLTMxcHgnLCctMzRkZWcnLCcyMG1zJ10sCiAgICBbJzI0JScsJzcyJScsJzRweCcsJzJweCcsJy01MnB4JywnMjVweCcsJzQxZGVnJywnMzRtcyddLAogICAgWyczOCUnLCcxOCUnLCc3cHgnLCcxcHgnLCctMTJweCcsJy00M3B4JywnMThkZWcnLCcxMm1zJ10sCiAgICBbJzQ5JScsJzY2JScsJzVweCcsJzJweCcsJzExcHgnLCczOHB4JywnLTQ3ZGVnJywnNDZtcyddLAogICAgWyc2MiUnLCczNCUnLCc4cHgnLCc ycHgnLCczNnB4JywnLTI3cHgnLCczM2RlZycsJzI2bXMnXSwKICAgIFsnNzMlJywnNzYlJywnNHB4JywnMnB4JywnNDhweCcsJzM0cHgnLCc2MWRlZycsJzM4bXMnXSwKICAgIFsnODQlJywnMjIlJywnNnB4JywnMXB4JywnNTlweCcsJy0zNnB4JywnLTIyZGVnJywnMTZtcyddLAogICAgWyc5MiUnLCc1OCUnLCc1cHgnLCcycHgnLCc2N3B4JywnMTVweCcsJzQ5ZGVnJywnNDJtcyddCiAgXTsKICBkZWJyaXMuZm9yRWFjaCgoW2xlZnQsdG9wLHcsaCxkeCxkeSxyb3QsZGVsYXldKT0+ewogICAgY29uc3QgYml0PWRvY3VtZW50LmNyZWF0ZUVsZW1lbnQoJ3NwYW4nKTsKICAgIGJpdC5jbGFzc05hbWU9J2hlcm8tc2hhdHRlci1kZWJyaXMnOwogICAgYml0LnNldEF0dHJpYnV0ZSgnYXJpYS1oaWRkZW4nLCd0cnVlJyk7CiAgICBiaXQuc3R5bGUuc2V0UHJvcGVydHkoJy0tbGVmdCcsbGVmdCk7CiAgICBiaXQuc3R5bGUuc2V0UHJvcGVydHkoJy0tdG9wJyx0b3ApOwogICAgYml0LnN0eWxlLnNldFByb3BlcnR5KCctLXcnLHcpOwogICAgYml0LnN0eWxlLnNldFByb3BlcnR5KCctLWgnLGgpOwogICAgYml0LnN0eWxlLnNldFByb3BlcnR5KCctLWR4JyxkeCk7CiAgICBiaXQuc3R5bGUuc2V0UHJvcGVydHkoJy0tZHknLGR5KTsKICAgIGJpdC5zdHlsZS5zZXRQcm9wZXJ0eSgnLS1yb3QnLHJvdCk7CiAgICBiaXQuc3R5bGUuc2V0UHJvcGVydHkoJy0tZGVsYXknLGRlbGF5KTsKICAgIHBocmFzZS5hcHBlbmRDaGlsZChiaXQpOwogIH0pOwoKICBoMS5yZXBsYWNlQ2hpbGRyZW4oZG9jdW1lbnQuY3JlYXRlVGV4dE5vZGUoZnVsbC5zbGljZSgwLHN0YXJ0KSkscGhyYXNlLGRvY3VtZW50LmNyZWF0ZVRleHROb2RlKGZ1bGwuc2xpY2Uoc3RhcnQrdGFyZ2V0Lmxlbmd0aCkpKTsKICBpZih3aW5kb3cubWF0Y2hNZWRpYSgnKHByZWZlcnMtcmVkdWNlZC1tb3Rpb246IHJlZHVjZSknKS5tYXRjaGVzKXJldHVybjsKCiAgbGV0IHZpc2libGU9ZmFsc2U7CiAgbGV0IHRpbWVyPTA7CiAgbGV0IHJlc2V0VGltZXI9MDsKICBjb25zdCBjbGVhclNjaGVkdWxlPSgpPT57d2luZG93LmNsZWFyVGltZW91dCh0aW1lcik7dGltZXI9MDt9OwogIGNvbnN0IHRyaWdnZXI9KCk9PnsKICAgIGlmKCF2aXNpYmxlfHxwaHJhc2UuY2xhc3NMaXN0LmNvbnRhaW5zKCdpcy1zaGF0dGVyaW5nJykpcmV0dXJuOwogICAgcGhyYXNlLmNsYXNzTGlzdC5yZW1vdmUoJ2lzLXNoYXR0ZXJpbmcnKTsKICAgIHZvaWQgcGhyYXNlLm9mZnNldFdpZHRoOwogICAgcGhyYXNlLmNsYXNzTGlzdC5hZGQoJ2lzLXNoYXR0ZXJpbmcnKTsKICAgIHdpbmRvdy5jbGVhclRpbWVvdXQocmVzZXRUaW1lcik7CiAgICByZXNldFRpbWVyPXdpbmRvdy5zZXRUaW1lb3V0KCgpPT5waHJhc2UuY2xhc3NMaXN0LnJlbW92ZSgnaXMtc2hhdHRlcmluZycpLDE3NTApOwogIH07CiAgY29uc3Qgc2NoZWR1bGU9KGRlbGF5PTQzMDApPT57CiAgICBjbGVhclNjaGVkdWxlKCk7CiAgICBpZighdmlzaWJsZXx8ZG9jdW1lbnQuaGlkZGVuKXJldHVybjsKICAgIHRpbWVyPXdpbmRvdy5zZXRUaW1lb3V0KCgpPT57CiAgICAgIHRyaWdnZXIoKTsKICAgICAgc2NoZWR1bGUoNDgwMCk7CiAgICB9LGRlbGF5KTsKICB9OwogIGNvbnN0IHNldFZpc2libGU9dmFsdWU9PnsKICAgIHZpc2libGU9dmFsdWU7CiAgICBpZih2aXNpYmxlKXNjaGVkdWxlKDE1MDApOwogICAgZWxzZXtjbGVhclNjaGVkdWxlKCk7cGhyYXNlLmNsYXNzTGlzdC5yZW1vdmUoJ2lzLXNoYXR0ZXJpbmcnKTt9CiAgfTsKICBpZignSW50ZXJzZWN0aW9uT2JzZXJ2ZXInIGluIHdpbmRvdykgewogICAgY29uc3Qgb2JzZXJ2ZXI9bmV3IEludGVyc2VjdGlvbk9ic2VydmVyKGVudHJpZXM9PnNldFZpc2libGUoZW50cmllc1swXT8uaW50ZXJzZWN0aW9uUmF0aW8+PS43MiksIHt0aHJlc2hvbGQ6WzAsLjcyLDFdfSk7CiAgICBvYnNlcnZlci5vYnNlcnZlKH BocmFzZSk7CiAgfWVsc2V7CiAgICBzZXRWaXNpYmxlKHRydWUpOwogIH0KICBkb2N1bWVudC5hZGRFdmVudExpc3RlbmVyKCd2aXNpYmlsaXR5Y2hhbmdlJywoKT0+e2lmKGRvY3VtZW50LmhpZGRlbiljbGVhclNjaGVkdWxlKCk7ZWxzZSBpZih2aXNpYmxlKXNjaGVkdWxlKDEyMDApO30pOwogIGNvbnN0IG1hbnVhbD0oKT0+e2lmKCF2aXNpYmxlKXJldHVybjt0cmlnZ2VyKCk7c2NoZWR1bGUoNTIwMCk7fTsKICBpZih3aW5kb3cubWF0Y2hNZWRpYSgnKGhvdmVyOmhvdmVyKSBhbmQgKHBvaW50ZXI6ZmluZSknKS5tYXRjaGVzKXBocmFzZS5hZGRFdmVudExpc3RlbmVyKCdwb2ludGVyZW50ZXInLG1hbnVhbCk7CiAgcGhyYXNlLmFkZEV2ZW50TGlzdGVuZXIoJ3BvaW50ZXJkb3duJyxtYW51YWwse3Bhc3NpdmU6dHJ1ZX0pOwp9KSgpOwo='.replace(' ', '')).decode('utf-8')
+          css = re.sub(r'/\* homepage hero live fracture \*/[\s\S]*\Z', lambda m: new_css, css, count=1)
+          js = re.sub(r'/\* homepage hero live fracture \*/[\s\S]*\Z', lambda m: new_js, js, count=1)
 
           if '/story.css?v=9' not in index or '/story.js?v=6' not in index:
               raise SystemExit('Unexpected homepage asset versions')
