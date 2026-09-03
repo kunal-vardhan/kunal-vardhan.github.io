@@ -66,12 +66,12 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 
 
-/* homepage hero resolve motion */
+/* homepage hero semantic fracture */
 (()=>{
-  const h1=document.querySelector('.story-hero h1');
-  if(!h1||h1.dataset.resolveReady==='true')return;
-  h1.dataset.resolveReady='true';
-  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const hero=document.querySelector('.story-hero');
+  const h1=hero?.querySelector('h1');
+  if(!hero||!h1||h1.dataset.fractureReady==='true')return;
+  h1.dataset.fractureReady='true';
   const target='hard to explain.';
   const full=h1.textContent||'';
   const start=full.lastIndexOf(target);
@@ -79,15 +79,55 @@ document.addEventListener('DOMContentLoaded',()=>{
   const before=full.slice(0,start);
   const after=full.slice(start+target.length);
   const phrase=document.createElement('span');
-  phrase.className='hero-resolve';
+  phrase.className='hero-fracture';
+  phrase.dataset.text=target;
   phrase.setAttribute('aria-label',target);
-  ['hard','to','explain.'].forEach((word,i)=>{
+  const rule=document.createElement('span');
+  rule.className='hero-fracture-rule';
+  rule.setAttribute('aria-hidden','true');
+  const words=['hard','to','explain.'].map((word,i)=>{
     const span=document.createElement('span');
-    span.className='hero-resolve-word';
+    span.className='hero-fracture-word';
+    span.dataset.text=word;
+    span.dataset.index=String(i);
     span.setAttribute('aria-hidden','true');
-    span.style.setProperty('--hero-i',String(i));
     span.textContent=word;
     phrase.appendChild(span);
+    return span;
   });
+  phrase.appendChild(rule);
   h1.replaceChildren(document.createTextNode(before),phrase,document.createTextNode(after));
+  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
+  if(reduced.matches)return;
+  const desktop=[{x:-78,y:-25,r:-5.2,s:1.035,slice:31},{x:16,y:47,r:6.4,s:.96,slice:-24},{x:98,y:-34,r:-4.1,s:1.025,slice:39}];
+  let ticking=false;
+  const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+  const smoothstep=t=>t*t*(3-2*t);
+  const render=()=>{
+    ticking=false;
+    const heroTop=hero.offsetTop;
+    const range=Math.max(330,hero.offsetHeight*.94);
+    const progress=clamp((window.scrollY-heroTop+18)/range,0,1);
+    const wave=Math.sin(Math.PI*progress);
+    const intensity=smoothstep(wave);
+    const compact=window.innerWidth<760 ? .54 : 1;
+    phrase.style.setProperty('--fracture-ghost',(intensity*.48).toFixed(3));
+    phrase.style.setProperty('--rule-opacity',(intensity*.72).toFixed(3));
+    phrase.style.setProperty('--rule-x',`${((progress-.5)*54*intensity).toFixed(1)}px`);
+    phrase.style.setProperty('--rule-scale',(1+intensity*.24).toFixed(3));
+    words.forEach((word,i)=>{
+      const m=desktop[i];
+      const local=intensity*(1-(i===1?Math.abs(progress-.5)*.08:0));
+      word.style.setProperty('--fx',`${(m.x*compact*local).toFixed(1)}px`);
+      word.style.setProperty('--fy',`${(m.y*compact*local).toFixed(1)}px`);
+      word.style.setProperty('--fr',`${(m.r*local).toFixed(2)}deg`);
+      word.style.setProperty('--fs',(1+(m.s-1)*local).toFixed(4));
+      word.style.setProperty('--slice',`${(m.slice*compact*local).toFixed(1)}px`);
+      word.style.setProperty('--slice-opacity',(local*.82).toFixed(3));
+    });
+  };
+  const queue=()=>{if(ticking)return;ticking=true;requestAnimationFrame(render);};
+  window.addEventListener('scroll',queue,{passive:true});
+  window.addEventListener('resize',queue,{passive:true});
+  render();
 })();
