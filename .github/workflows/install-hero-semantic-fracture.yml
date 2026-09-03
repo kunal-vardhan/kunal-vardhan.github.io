@@ -1,0 +1,173 @@
+name: Install homepage semantic fracture
+
+on:
+  push:
+    paths:
+      - '.github/workflows/install-hero-semantic-fracture.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Replace one-shot hero motion with scroll fracture
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          css_path = Path('story.css')
+          js_path = Path('story.js')
+          index_path = Path('index.html')
+
+          css = css_path.read_text(encoding='utf-8')
+          js = js_path.read_text(encoding='utf-8')
+          index = index_path.read_text(encoding='utf-8')
+
+          css_marker = '/* homepage hero resolve motion */'
+          js_marker = '/* homepage hero resolve motion */'
+          if css_marker not in css:
+              raise SystemExit('Existing hero resolve CSS marker not found')
+          if js_marker not in js:
+              raise SystemExit('Existing hero resolve JS marker not found')
+
+          new_css = r'''/* homepage hero semantic fracture */
+.hero-fracture{position:relative;display:inline-flex;align-items:baseline;gap:.18em;white-space:nowrap;vertical-align:baseline;isolation:isolate}
+.hero-fracture::before{content:attr(data-text);position:absolute;inset:0;white-space:nowrap;color:transparent;-webkit-text-stroke:1px rgba(104,123,112,.72);opacity:var(--fracture-ghost,0);z-index:0;pointer-events:none}
+.hero-fracture-word{position:relative;display:inline-block;z-index:2;transform:translate3d(var(--fx,0px),var(--fy,0px),0) rotate(var(--fr,0deg)) scale(var(--fs,1));transform-origin:50% 72%;will-change:transform}
+.hero-fracture-word::after{content:attr(data-text);position:absolute;inset:0;color:var(--ink);clip-path:inset(36% -45% 34% -45%);transform:translate3d(var(--slice,0px),0,0);opacity:var(--slice-opacity,0);pointer-events:none;z-index:3}
+.hero-fracture-word:nth-child(2)::after{clip-path:inset(18% -55% 55% -55%)}
+.hero-fracture-word:nth-child(3)::after{clip-path:inset(55% -35% 15% -35%)}
+.hero-fracture-rule{position:absolute;left:-.04em;right:-.04em;top:54%;height:1px;background:var(--sand);opacity:var(--rule-opacity,0);transform:translateX(var(--rule-x,0px)) scaleX(var(--rule-scale,1));transform-origin:center;z-index:1;pointer-events:none}
+@media(max-width:760px){.hero-fracture-word{will-change:auto}.hero-fracture::before{-webkit-text-stroke-width:.8px}}
+@media(prefers-reduced-motion:reduce){.hero-fracture-word{transform:none!important}.hero-fracture-word::after,.hero-fracture::before,.hero-fracture-rule{display:none!important}}
+'''
+
+          css = re.sub(r'/\* homepage hero resolve motion \*/[\s\S]*\Z', new_css, css, count=1)
+
+          new_js = r'''/* homepage hero semantic fracture */
+(()=>{
+  const hero=document.querySelector('.story-hero');
+  const h1=hero?.querySelector('h1');
+  if(!hero||!h1||h1.dataset.fractureReady==='true')return;
+  h1.dataset.fractureReady='true';
+  const target='hard to explain.';
+  const full=h1.textContent||'';
+  const start=full.lastIndexOf(target);
+  if(start<0)return;
+  const before=full.slice(0,start);
+  const after=full.slice(start+target.length);
+  const phrase=document.createElement('span');
+  phrase.className='hero-fracture';
+  phrase.dataset.text=target;
+  phrase.setAttribute('aria-label',target);
+  const rule=document.createElement('span');
+  rule.className='hero-fracture-rule';
+  rule.setAttribute('aria-hidden','true');
+  const words=['hard','to','explain.'].map((word,i)=>{
+    const span=document.createElement('span');
+    span.className='hero-fracture-word';
+    span.dataset.text=word;
+    span.dataset.index=String(i);
+    span.setAttribute('aria-hidden','true');
+    span.textContent=word;
+    phrase.appendChild(span);
+    return span;
+  });
+  phrase.appendChild(rule);
+  h1.replaceChildren(document.createTextNode(before),phrase,document.createTextNode(after));
+
+  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
+  if(reduced.matches)return;
+
+  const desktop=[
+    {x:-78,y:-25,r:-5.2,s:1.035,slice:31},
+    {x:16,y:47,r:6.4,s:.96,slice:-24},
+    {x:98,y:-34,r:-4.1,s:1.025,slice:39}
+  ];
+  let ticking=false;
+
+  const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+  const smoothstep=t=>t*t*(3-2*t);
+  const render=()=>{
+    ticking=false;
+    const heroTop=hero.offsetTop;
+    const range=Math.max(330,hero.offsetHeight*.94);
+    const progress=clamp((window.scrollY-heroTop+18)/range,0,1);
+    const wave=Math.sin(Math.PI*progress);
+    const intensity=smoothstep(wave);
+    const compact=window.innerWidth<760?.54:1;
+    phrase.style.setProperty('--fracture-ghost',(intensity*.48).toFixed(3));
+    phrase.style.setProperty('--rule-opacity',(intensity*.72).toFixed(3));
+    phrase.style.setProperty('--rule-x',`${((progress-.5)*54*intensity).toFixed(1)}px`);
+    phrase.style.setProperty('--rule-scale',(1+intensity*.24).toFixed(3));
+    words.forEach((word,i)=>{
+      const m=desktop[i];
+      const local=intensity*(1-(i===1?Math.abs(progress-.5)*.08:0));
+      word.style.setProperty('--fx',`${(m.x*compact*local).toFixed(1)}px`);
+      word.style.setProperty('--fy',`${(m.y*compact*local).toFixed(1)}px`);
+      word.style.setProperty('--fr',`${(m.r*local).toFixed(2)}deg`);
+      word.style.setProperty('--fs',(1+(m.s-1)*local).toFixed(4));
+      word.style.setProperty('--slice',`${(m.slice*compact*local).toFixed(1)}px`);
+      word.style.setProperty('--slice-opacity',(local*.82).toFixed(3));
+    });
+  };
+  const queue=()=>{
+    if(ticking)return;
+    ticking=true;
+    requestAnimationFrame(render);
+  };
+  window.addEventListener('scroll',queue,{passive:true});
+  window.addEventListener('resize',queue,{passive:true});
+  render();
+})();
+'''
+          js = re.sub(r'/\* homepage hero resolve motion \*/[\s\S]*\Z', new_js, js, count=1)
+
+          if '/story.css?v=7' not in index:
+              raise SystemExit('Expected homepage story.css version 7 not found')
+          if '/story.js?v=4' not in index:
+              raise SystemExit('Expected homepage story.js version 4 not found')
+          index = index.replace('/story.css?v=7','/story.css?v=8',1)
+          index = index.replace('/story.js?v=4','/story.js?v=5',1)
+
+          css_path.write_text(css,encoding='utf-8')
+          js_path.write_text(js,encoding='utf-8')
+          index_path.write_text(index,encoding='utf-8')
+          PY
+
+      - name: Validate semantic fracture
+        run: |
+          ! grep -q 'homepage hero resolve motion' story.css
+          ! grep -q 'homepage hero resolve motion' story.js
+          grep -q 'homepage hero semantic fracture' story.css
+          grep -q 'homepage hero semantic fracture' story.js
+          grep -q 'Math.sin(Math.PI\*progress)' story.js
+          grep -q 'x:98,y:-34' story.js
+          grep -q 'clip-path:inset' story.css
+          grep -q '/story.css?v=8' index.html
+          grep -q '/story.js?v=5' index.html
+          grep -q '<strong>5 years</strong>' index.html
+
+      - name: Commit semantic fracture
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          LATEST="$(git rev-parse origin/main)"
+          BASE="$(git rev-parse HEAD)"
+          echo "Latest main SHA: $LATEST"
+          echo "Checked-out SHA: $BASE"
+          if [ "$LATEST" != "$BASE" ]; then
+            echo "main changed while preparing semantic fracture; refusing to overwrite it"
+            exit 1
+          fi
+          git add story.css story.js index.html
+          git commit -m "Replace hero intro with scroll semantic fracture"
+          git push origin HEAD:main
