@@ -1,0 +1,158 @@
+name: Render Self-Motivation as page images
+
+on:
+  push:
+    paths:
+      - '.github/workflows/render-self-motivation-pages.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Download, render and optimize Self-Motivation
+        run: |
+          python -m pip install --disable-pip-version-check gdown pymupdf pillow
+          mkdir -p ebook-previews
+          gdown "13LumuoxQMCoomfTEU9KjzLh87rAIbgks" -O ebook-previews/self-motivation-source.pdf
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          import fitz
+          from PIL import Image
+
+          source = Path('ebook-previews/self-motivation-source.pdf')
+          if not source.exists() or source.stat().st_size < 500_000:
+              raise SystemExit('Self-Motivation source PDF is missing or unexpectedly small')
+
+          doc = fitz.open(source)
+          page_count = doc.page_count
+          if page_count < 2:
+              raise SystemExit(f'Unexpected Self-Motivation page count: {page_count}')
+
+          outdir = Path('ebook-previews')
+          for old in outdir.glob('self-motivation-page-*.webp'):
+              old.unlink()
+
+          rendered = []
+          target_width = 720
+          for index, page in enumerate(doc, start=1):
+              rect = page.rect
+              scale = target_width / rect.width
+              pix = page.get_pixmap(matrix=fitz.Matrix(scale, scale), colorspace=fitz.csRGB, alpha=False)
+              image = Image.frombytes('RGB', (pix.width, pix.height), pix.samples)
+              output = outdir / f'self-motivation-page-{index:02d}.webp'
+              quality = 74
+              image.save(output, 'WEBP', quality=quality, method=4)
+              while output.stat().st_size > 180_000 and quality > 50:
+                  quality -= 6
+                  image.save(output, 'WEBP', quality=quality, method=4)
+              rendered.append((output, pix.width, pix.height, output.stat().st_size))
+
+          doc.close()
+          if len(rendered) != page_count:
+              raise SystemExit(f'Expected {page_count} rendered pages, got {len(rendered)}')
+
+          total = sum(item[3] for item in rendered)
+          largest = max(item[3] for item in rendered)
+          if total > 12_000_000:
+              raise SystemExit(f'Rendered set is too heavy: {total} bytes')
+          if largest > 220_000:
+              raise SystemExit(f'A rendered page is too heavy: {largest} bytes')
+
+          html_path = Path('work.html')
+          html = html_path.read_text(encoding='utf-8')
+          byline = '<aside class="byline-note" aria-label="Ghostwriting and byline disclosure"><span class="byline-label">About the bylines</span><strong>Why some samples don’t have my name</strong><p>A part of my client work has been ghostwritten or published under the brand’s name. So you may open a sample and not see “Kunal Vardhan” in the byline. The pieces shown here are work I contributed to directly through writing, research, structure, or content development.</p></aside>'
+          if html.count(byline) != 1:
+              raise SystemExit('Exact byline disclosure was not found once before patching')
+
+          images = []
+          for i, (file, width, height, _) in enumerate(rendered, start=1):
+              alt = 'A Self-Motivation Guidebook eBook cover' if i == 1 else ''
+              images.append(
+                  f'<img src="/{file.as_posix()}" width="{width}" height="{height}" alt="{alt}" loading="lazy" decoding="async" fetchpriority="low">'
+              )
+          stack = ''.join(images)
+          replacement = (
+              '<article class="ebook-sample-card"><div class="visual-work-head"><div><span>Long-form guide · eBook</span>'
+              '<h3>A Self-Motivation Guidebook</h3></div></div>'
+              f'<div class="ebook-scroll-frame" aria-label="Full {page_count}-page A Self-Motivation Guidebook eBook">'
+              + stack +
+              f'</div><p>Full {page_count}-page self-motivation guidebook shown as the original work sample.</p></article>'
+          )
+          pattern = re.compile(r'<article class="ebook-sample-card"><div class="visual-work-head"><div><span>Long-form guide · eBook</span><h3>A Self-Motivation Guidebook</h3></div></div>.*?</article>', re.S)
+          patched, count = pattern.subn(replacement, html, count=1)
+          if count != 1:
+              raise SystemExit(f'Expected one Self-Motivation card replacement, got {count}')
+          if patched.count(byline) != 1:
+              raise SystemExit('Byline disclosure changed during patch')
+          block = re.search(pattern, patched).group(0)
+          if '<iframe' in block or '.pdf' in block:
+              raise SystemExit('Self-Motivation still depends on a PDF viewer')
+
+          html_path.write_text(patched, encoding='utf-8')
+          source.unlink()
+          for legacy in ['self-motivation.webp','self-motivation.b64']:
+              p = outdir / legacy
+              if p.exists():
+                  p.unlink()
+
+          print(f'SELF_MOTIVATION_PAGES={page_count}')
+          print(f'Rendered {page_count} pages at {target_width}px width')
+          print(f'Total optimized image weight: {total / 1024 / 1024:.2f} MiB')
+          print(f'Largest page: {largest / 1024:.1f} KiB')
+          PY
+
+      - name: Validate single-scroll implementation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path('work.html').read_text(encoding='utf-8')
+          card = re.search(r'<article class="ebook-sample-card"><div class="visual-work-head"><div><span>Long-form guide · eBook</span><h3>A Self-Motivation Guidebook</h3></div></div>.*?</article>', html, re.S)
+          if not card:
+              raise SystemExit('Self-Motivation card missing')
+          block = card.group(0)
+          if '<iframe' in block or '.pdf' in block:
+              raise SystemExit('Self-Motivation still depends on a PDF viewer')
+          refs = re.findall(r'self-motivation-page-\d{2}\.webp', block)
+          files = sorted(Path('ebook-previews').glob('self-motivation-page-*.webp'))
+          if not refs or len(refs) != len(set(refs)) or len(refs) != len(files):
+              raise SystemExit(f'Self-Motivation page mismatch: {len(set(refs))} refs, {len(files)} files')
+          for legacy in ['self-motivation.webp','self-motivation.b64','self-motivation-source.pdf']:
+              if Path('ebook-previews', legacy).exists():
+                  raise SystemExit(f'Legacy Self-Motivation file still exists: {legacy}')
+          print(f'Validated: {len(files)} unique WebP pages, no iframe, no PDF, one native scroll frame')
+          PY
+
+      - name: Commit production-ready Self-Motivation preview
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          LATEST="$(git rev-parse origin/main)"
+          BASE="$(git rev-parse HEAD)"
+          echo "Latest main SHA: $LATEST"
+          echo "Checked-out SHA: $BASE"
+          if [ "$LATEST" != "$BASE" ]; then
+            echo "main changed while rendering; refusing to overwrite it"
+            exit 1
+          fi
+          git add work.html ebook-previews/self-motivation-page-*.webp
+          git add -u ebook-previews
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "Render Self-Motivation as optimized page stack"
+          git push origin HEAD:main
