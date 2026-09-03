@@ -1,0 +1,62 @@
+name: Update portfolio experience to five years
+
+on:
+  push:
+    paths:
+      - '.github/workflows/update-experience-five-years.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update public experience references
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          files = [Path('index.html'), Path('about.html')]
+          expected = {'index.html': 1, 'about.html': 3}
+
+          for path in files:
+              text = path.read_text(encoding='utf-8')
+              count = text.count('4.5 years')
+              if count != expected[path.name]:
+                  raise SystemExit(f'{path}: expected {expected[path.name]} occurrences of 4.5 years, found {count}')
+              path.write_text(text.replace('4.5 years', '5 years'), encoding='utf-8')
+
+          for path in files:
+              text = path.read_text(encoding='utf-8')
+              if '4.5 years' in text:
+                  raise SystemExit(f'{path}: stale 4.5 years reference remains')
+          PY
+
+      - name: Validate targeted change
+        run: |
+          grep -q '<strong>5 years</strong>' index.html
+          grep -q 'with 5 years of experience' about.html
+          grep -q 'I’ve spent 5 years working' about.html
+          grep -q '<span>5 years across full-time and independent content work</span>' about.html
+
+      - name: Commit experience update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          LATEST="$(git rev-parse origin/main)"
+          BASE="$(git rev-parse HEAD)"
+          echo "Latest main SHA: $LATEST"
+          echo "Checked-out SHA: $BASE"
+          if [ "$LATEST" != "$BASE" ]; then
+            echo "main changed while preparing the experience update; refusing to overwrite it"
+            exit 1
+          fi
+          git add index.html about.html
+          git commit -m "Update portfolio experience to 5 years"
+          git push origin HEAD:main
