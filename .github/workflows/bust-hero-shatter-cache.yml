@@ -1,0 +1,47 @@
+name: Bust hero shatter cache
+
+on:
+  push:
+    paths:
+      - '.github/workflows/bust-hero-shatter-cache.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  bust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Bump shatter script version
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          if '/hero-shatter.js?v=1' not in s:
+              raise SystemExit('Expected shatter v1 reference not found')
+          s=s.replace('/hero-shatter.js?v=1','/hero-shatter.js?v=2',1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Validate
+        run: |
+          grep -q '/hero-shatter.js?v=2' index.html
+          grep -q '/hero-shatter.css?v=1' index.html
+          grep -q '<strong>5 years</strong>' index.html
+      - name: Commit cache bust
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          LATEST="$(git rev-parse origin/main)"
+          BASE="$(git rev-parse HEAD)"
+          if [ "$LATEST" != "$BASE" ]; then
+            echo "main changed; refusing to overwrite it"
+            exit 1
+          fi
+          git add index.html
+          git commit -m "Bust corrected hero shatter script cache"
+          git push origin HEAD:main
