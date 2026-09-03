@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 
 
-/* homepage hero semantic fracture */
+/* homepage hero live fracture */
 (()=>{
   const hero=document.querySelector('.story-hero');
   const h1=hero?.querySelector('h1');
@@ -76,58 +76,43 @@ document.addEventListener('DOMContentLoaded',()=>{
   const full=h1.textContent||'';
   const start=full.lastIndexOf(target);
   if(start<0)return;
-  const before=full.slice(0,start);
-  const after=full.slice(start+target.length);
   const phrase=document.createElement('span');
   phrase.className='hero-fracture';
   phrase.dataset.text=target;
   phrase.setAttribute('aria-label',target);
-  const rule=document.createElement('span');
-  rule.className='hero-fracture-rule';
-  rule.setAttribute('aria-hidden','true');
-  const words=['hard','to','explain.'].map((word,i)=>{
+  const words=['hard','to','explain.'];
+  words.forEach(word=>{
     const span=document.createElement('span');
     span.className='hero-fracture-word';
     span.dataset.text=word;
-    span.dataset.index=String(i);
     span.setAttribute('aria-hidden','true');
     span.textContent=word;
     phrase.appendChild(span);
-    return span;
   });
+  const rule=document.createElement('span');
+  rule.className='hero-fracture-rule';
+  rule.setAttribute('aria-hidden','true');
   phrase.appendChild(rule);
-  h1.replaceChildren(document.createTextNode(before),phrase,document.createTextNode(after));
-  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
-  if(reduced.matches)return;
-  const desktop=[{x:-78,y:-25,r:-5.2,s:1.035,slice:31},{x:16,y:47,r:6.4,s:.96,slice:-24},{x:98,y:-34,r:-4.1,s:1.025,slice:39}];
-  let ticking=false;
-  const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
-  const smoothstep=t=>t*t*(3-2*t);
-  const render=()=>{
-    ticking=false;
-    const heroTop=hero.offsetTop;
-    const range=Math.max(330,hero.offsetHeight*.94);
-    const progress=clamp((window.scrollY-heroTop+18)/range,0,1);
-    const wave=Math.sin(Math.PI*progress);
-    const intensity=smoothstep(wave);
-    const compact=window.innerWidth<760 ? .54 : 1;
-    phrase.style.setProperty('--fracture-ghost',(intensity*.48).toFixed(3));
-    phrase.style.setProperty('--rule-opacity',(intensity*.72).toFixed(3));
-    phrase.style.setProperty('--rule-x',`${((progress-.5)*54*intensity).toFixed(1)}px`);
-    phrase.style.setProperty('--rule-scale',(1+intensity*.24).toFixed(3));
-    words.forEach((word,i)=>{
-      const m=desktop[i];
-      const local=intensity*(1-(i===1?Math.abs(progress-.5)*.08:0));
-      word.style.setProperty('--fx',`${(m.x*compact*local).toFixed(1)}px`);
-      word.style.setProperty('--fy',`${(m.y*compact*local).toFixed(1)}px`);
-      word.style.setProperty('--fr',`${(m.r*local).toFixed(2)}deg`);
-      word.style.setProperty('--fs',(1+(m.s-1)*local).toFixed(4));
-      word.style.setProperty('--slice',`${(m.slice*compact*local).toFixed(1)}px`);
-      word.style.setProperty('--slice-opacity',(local*.82).toFixed(3));
-    });
+  h1.replaceChildren(document.createTextNode(full.slice(0,start)),phrase,document.createTextNode(full.slice(start+target.length)));
+
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const setLive=visible=>phrase.classList.toggle('is-live',visible);
+  if('IntersectionObserver' in window){
+    const observer=new IntersectionObserver(entries=>setLive(entries[0]?.isIntersecting===true),{threshold:.18});
+    observer.observe(hero);
+  }else{
+    setLive(true);
+  }
+  let kickTimer=0;
+  const kick=()=>{
+    window.clearTimeout(kickTimer);
+    phrase.classList.remove('is-kick');
+    void phrase.offsetWidth;
+    phrase.classList.add('is-kick');
+    kickTimer=window.setTimeout(()=>phrase.classList.remove('is-kick'),980);
   };
-  const queue=()=>{if(ticking)return;ticking=true;requestAnimationFrame(render);};
-  window.addEventListener('scroll',queue,{passive:true});
-  window.addEventListener('resize',queue,{passive:true});
-  render();
+  if(window.matchMedia('(hover:hover) and (pointer:fine)').matches){
+    phrase.addEventListener('pointerenter',kick);
+  }
+  phrase.addEventListener('pointerdown',kick,{passive:true});
 })();
