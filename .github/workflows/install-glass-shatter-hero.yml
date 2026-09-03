@@ -1,0 +1,217 @@
+name: Install glass shatter hero
+
+on:
+  push:
+    paths:
+      - '.github/workflows/install-glass-shatter-hero.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Replace hero motion with glass shatter
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          css_path = Path('story.css')
+          js_path = Path('story.js')
+          index_path = Path('index.html')
+          css = css_path.read_text(encoding='utf-8')
+          js = js_path.read_text(encoding='utf-8')
+          index = index_path.read_text(encoding='utf-8')
+
+          marker = '/* homepage hero live fracture */'
+          if marker not in css or marker not in js:
+              raise SystemExit('Current live hero fracture marker not found')
+
+          new_css = r'''/* homepage hero glass shatter */
+.hero-shatter{position:relative;display:inline-block;white-space:nowrap;vertical-align:baseline;isolation:isolate;cursor:default}
+.hero-shatter-base{position:relative;z-index:1;display:inline-block}
+.hero-shatter::after{content:attr(data-text);position:absolute;inset:0;color:transparent;-webkit-text-stroke:1px rgba(104,123,112,.78);opacity:0;z-index:0;pointer-events:none}
+.hero-shatter-shard{position:absolute;inset:0;z-index:4;display:block;opacity:0;clip-path:var(--clip);transform-origin:var(--ox,50%) var(--oy,50%);pointer-events:none}
+.hero-shatter-impact{position:absolute;inset:-18% -9%;z-index:6;opacity:0;pointer-events:none}
+.hero-shatter-impact::before,.hero-shatter-impact::after{content:"";position:absolute;left:8%;top:50%;width:92%;height:1px;background:var(--sand);transform-origin:center}
+.hero-shatter-impact::before{transform:rotate(-11deg) scaleX(.08)}
+.hero-shatter-impact::after{transform:rotate(7deg) scaleX(.06)}
+.hero-shatter-debris{position:absolute;left:var(--left);top:var(--top);z-index:5;width:var(--w);height:var(--h);background:var(--ink);opacity:0;transform-origin:center;pointer-events:none}
+.hero-shatter-debris:nth-of-type(even){background:var(--sand)}
+.hero-shatter.is-shattering .hero-shatter-base{animation:hero-shatter-base 1.58s cubic-bezier(.18,.76,.16,1) both}
+.hero-shatter.is-shattering::after{animation:hero-shatter-ghost 1.58s ease both}
+.hero-shatter.is-shattering .hero-shatter-shard{animation:hero-shard-flight 1.58s cubic-bezier(.16,.82,.16,1) var(--delay,0ms) both}
+.hero-shatter.is-shattering .hero-shatter-impact{animation:hero-impact-flash 1.58s ease both}
+.hero-shatter.is-shattering .hero-shatter-debris{animation:hero-debris-flight 1.42s cubic-bezier(.15,.78,.14,1) var(--delay,0ms) both}
+@keyframes hero-shatter-base{0%,8%{opacity:1}15%{opacity:.08}58%{opacity:.08}87%,100%{opacity:1}}
+@keyframes hero-shatter-ghost{0%,9%,91%,100%{opacity:0}16%{opacity:.24}31%{opacity:.72}58%{opacity:.48}80%{opacity:.15}}
+@keyframes hero-shard-flight{0%,7%{opacity:0;transform:none}10%{opacity:1;transform:none}31%{opacity:1;transform:translate3d(var(--dx),var(--dy),0) rotate(var(--rot)) scale(var(--scale,1.02))}54%{opacity:1;transform:translate3d(var(--dx),var(--dy),0) rotate(var(--rot)) scale(var(--scale,1.02))}72%{opacity:1;transform:translate3d(calc(var(--dx)*.34),calc(var(--dy)*.22),0) rotate(calc(var(--rot)*-.38)) scale(.995)}91%{opacity:1;transform:none}100%{opacity:0;transform:none}}
+@keyframes hero-impact-flash{0%,7%,28%,100%{opacity:0}10%{opacity:1}13%{opacity:.82}18%{opacity:.18}}
+@keyframes hero-debris-flight{0%,9%{opacity:0;transform:translate3d(0,0,0) rotate(0)}15%{opacity:.95}38%{opacity:1;transform:translate3d(var(--dx),var(--dy),0) rotate(var(--rot))}63%{opacity:.78;transform:translate3d(calc(var(--dx)*.72),calc(var(--dy)*.85),0) rotate(calc(var(--rot)*1.3))}91%,100%{opacity:0;transform:translate3d(0,0,0) rotate(0)}}
+@media(max-width:760px){.hero-shatter{--mobile:.62}.hero-shatter-shard,.hero-shatter-debris{will-change:auto}.hero-shatter::after{-webkit-text-stroke-width:.8px}}
+@media(prefers-reduced-motion:reduce){.hero-shatter-base{opacity:1!important;animation:none!important}.hero-shatter::after,.hero-shatter-shard,.hero-shatter-impact,.hero-shatter-debris{display:none!important}}
+'''
+          css = re.sub(r'/\* homepage hero live fracture \*/[\s\S]*\Z', new_css, css, count=1)
+
+          new_js = r'''/* homepage hero glass shatter */
+(()=>{
+  const hero=document.querySelector('.story-hero');
+  const h1=hero?.querySelector('h1');
+  if(!hero||!h1||h1.dataset.shatterReady==='true')return;
+  h1.dataset.shatterReady='true';
+  const target='hard to explain.';
+  const full=h1.textContent||'';
+  const start=full.lastIndexOf(target);
+  if(start<0)return;
+
+  const phrase=document.createElement('span');
+  phrase.className='hero-shatter';
+  phrase.dataset.text=target;
+  const base=document.createElement('span');
+  base.className='hero-shatter-base';
+  base.textContent=target;
+  phrase.appendChild(base);
+
+  const shards=[
+    ['polygon(0 0,31% 0,27% 42%,0 56%)','-52px','-34px','-8deg','1.035','0ms','24%','34%'],
+    ['polygon(31% 0,64% 0,57% 46%,27% 42%)','14px','-48px','6deg','1.02','22ms','48%','28%'],
+    ['polygon(64% 0,100% 0,100% 38%,57% 46%)','72px','-28px','8deg','1.04','10ms','70%','30%'],
+    ['polygon(0 56%,27% 42%,45% 63%,25% 100%,0 100%)','-64px','24px','7deg','1.025','36ms','22%','72%'],
+    ['polygon(27% 42%,57% 46%,72% 68%,45% 63%)','-8px','9px','-11deg','1.08','54ms','50%','53%'],
+    ['polygon(57% 46%,100% 38%,100% 77%,72% 68%)','82px','18px','-7deg','1.03','30ms','77%','58%'],
+    ['polygon(25% 100%,45% 63%,72% 68%,61% 100%)','-10px','47px','9deg','1.025','44ms','49%','82%'],
+    ['polygon(61% 100%,72% 68%,100% 77%,100% 100%)','56px','43px','12deg','1.04','18ms','82%','84%']
+  ];
+  shards.forEach(([clip,dx,dy,rot,scale,delay,ox,oy])=>{
+    const shard=document.createElement('span');
+    shard.className='hero-shatter-shard';
+    shard.textContent=target;
+    shard.setAttribute('aria-hidden','true');
+    shard.style.setProperty('--clip',clip);
+    shard.style.setProperty('--dx',dx);
+    shard.style.setProperty('--dy',dy);
+    shard.style.setProperty('--rot',rot);
+    shard.style.setProperty('--scale',scale);
+    shard.style.setProperty('--delay',delay);
+    shard.style.setProperty('--ox',ox);
+    shard.style.setProperty('--oy',oy);
+    phrase.appendChild(shard);
+  });
+
+  const impact=document.createElement('span');
+  impact.className='hero-shatter-impact';
+  impact.setAttribute('aria-hidden','true');
+  phrase.appendChild(impact);
+
+  const debris=[
+    ['12%','24%','6px','2px','-38px','-31px','-34deg','20ms'],
+    ['24%','72%','4px','2px','-52px','25px','41deg','34ms'],
+    ['38%','18%','7px','1px','-12px','-43px','18deg','12ms'],
+    ['49%','66%','5px','2px','11px','38px','-47deg','46ms'],
+    ['62%','34%','8px','2px','36px','-27px','33deg','26ms'],
+    ['73%','76%','4px','2px','48px','34px','61deg','38ms'],
+    ['84%','22%','6px','1px','59px','-36px','-22deg','16ms'],
+    ['92%','58%','5px','2px','67px','15px','49deg','42ms']
+  ];
+  debris.forEach(([left,top,w,h,dx,dy,rot,delay])=>{
+    const bit=document.createElement('span');
+    bit.className='hero-shatter-debris';
+    bit.setAttribute('aria-hidden','true');
+    bit.style.setProperty('--left',left);
+    bit.style.setProperty('--top',top);
+    bit.style.setProperty('--w',w);
+    bit.style.setProperty('--h',h);
+    bit.style.setProperty('--dx',dx);
+    bit.style.setProperty('--dy',dy);
+    bit.style.setProperty('--rot',rot);
+    bit.style.setProperty('--delay',delay);
+    phrase.appendChild(bit);
+  });
+
+  h1.replaceChildren(document.createTextNode(full.slice(0,start)),phrase,document.createTextNode(full.slice(start+target.length)));
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+
+  let visible=false;
+  let timer=0;
+  let resetTimer=0;
+  const clearSchedule=()=>{window.clearTimeout(timer);timer=0;};
+  const trigger=()=>{
+    if(!visible||phrase.classList.contains('is-shattering'))return;
+    phrase.classList.remove('is-shattering');
+    void phrase.offsetWidth;
+    phrase.classList.add('is-shattering');
+    window.clearTimeout(resetTimer);
+    resetTimer=window.setTimeout(()=>phrase.classList.remove('is-shattering'),1750);
+  };
+  const schedule=(delay=4300)=>{
+    clearSchedule();
+    if(!visible||document.hidden)return;
+    timer=window.setTimeout(()=>{
+      trigger();
+      schedule(4800);
+    },delay);
+  };
+  const setVisible=value=>{
+    visible=value;
+    if(visible)schedule(1500);
+    else{clearSchedule();phrase.classList.remove('is-shattering');}
+  };
+  if('IntersectionObserver' in window){
+    const observer=new IntersectionObserver(entries=>setVisible(entries[0]?.intersectionRatio>=.72),{threshold:[0,.72,1]});
+    observer.observe(phrase);
+  }else{
+    setVisible(true);
+  }
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)clearSchedule();else if(visible)schedule(1200);});
+  const manual=()=>{if(!visible)return;trigger();schedule(5200);};
+  if(window.matchMedia('(hover:hover) and (pointer:fine)').matches)phrase.addEventListener('pointerenter',manual);
+  phrase.addEventListener('pointerdown',manual,{passive:true});
+})();
+'''
+          js = re.sub(r'/\* homepage hero live fracture \*/[\s\S]*\Z', new_js, js, count=1)
+
+          if '/story.css?v=9' not in index or '/story.js?v=6' not in index:
+              raise SystemExit('Unexpected homepage asset versions')
+          index = index.replace('/story.css?v=9','/story.css?v=10',1)
+          index = index.replace('/story.js?v=6','/story.js?v=7',1)
+
+          css_path.write_text(css, encoding='utf-8')
+          js_path.write_text(js, encoding='utf-8')
+          index_path.write_text(index, encoding='utf-8')
+          PY
+
+      - name: Validate glass shatter
+        run: |
+          ! grep -q 'homepage hero live fracture' story.css
+          ! grep -q 'homepage hero live fracture' story.js
+          grep -q 'homepage hero glass shatter' story.css
+          grep -q 'homepage hero glass shatter' story.js
+          grep -q 'hero-shatter-shard' story.css
+          grep -q 'polygon(0 0,31% 0' story.js
+          grep -q 'intersectionRatio>=.72' story.js
+          grep -q '/story.css?v=10' index.html
+          grep -q '/story.js?v=7' index.html
+          grep -q '<strong>5 years</strong>' index.html
+
+      - name: Commit glass shatter
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          LATEST="$(git rev-parse origin/main)"
+          BASE="$(git rev-parse HEAD)"
+          echo "Latest main SHA: $LATEST"
+          echo "Checked-out SHA: $BASE"
+          if [ "$LATEST" != "$BASE" ]; then
+            echo "main changed while preparing glass shatter; refusing to overwrite it"
+            exit 1
+          fi
+          git add story.css story.js index.html
+          git commit -m "Replace hero fracture with glass shatter effect"
+          git push origin HEAD:main
