@@ -18,7 +18,7 @@
   base.textContent=target;
   phrase.appendChild(base);
 
-  const compact=window.innerWidth<760?.58:1;
+  const compact=window.innerWidth<760 ? .58 : 1;
   const shards=[
     ['polygon(0 0,31% 0,27% 42%,0 56%)',-52,-34,-8,1.035,0,'24%','34%'],
     ['polygon(31% 0,64% 0,57% 46%,27% 42%)',14,-48,6,1.02,22,'48%','28%'],
