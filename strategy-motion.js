@@ -154,3 +154,113 @@
     if (document.documentElement.classList.contains('boring-mode')) finish();
   });
 })();
+
+(() => {
+  const grid = document.querySelector('.strategy-grid-2');
+  const funnel = grid?.querySelector('.funnel');
+  const cluster = grid?.querySelector('.cluster');
+  const stages = funnel ? [...funnel.children] : [];
+  const assets = cluster ? [...cluster.querySelectorAll('.node')] : [];
+  const hub = cluster?.querySelector('.hub');
+  if (!grid || !funnel || !cluster || !hub || stages.length !== 4 || assets.length !== 5) return;
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const stageNames = ['Awareness', 'Consideration', 'Decision', 'Lifecycle'];
+  const assetNames = ['Education', 'Use cases', 'Problems', 'Comparisons', 'Commercial intent'];
+  const matches = [
+    [0, 2],
+    [1, 2, 3],
+    [3, 4],
+    [0, 1]
+  ];
+  let demoPlayed = false;
+  let demoTimers = [];
+
+  grid.classList.add('strategy-asset-motion');
+
+  const note = document.createElement('div');
+  note.className = 'strategy-asset-note';
+  note.id = 'strategy-asset-note';
+  note.innerHTML = '<strong>Stage → asset fit</strong><span>Hover, focus, or tap a buyer stage to see which asset types fit that job.</span>';
+  grid.appendChild(note);
+
+  stages.forEach((stage, index) => {
+    stage.tabIndex = 0;
+    stage.setAttribute('aria-describedby', note.id);
+    stage.dataset.stageIndex = String(index);
+  });
+
+  const cancelDemo = () => {
+    demoTimers.forEach(clearTimeout);
+    demoTimers = [];
+    demoPlayed = true;
+  };
+
+  const showStage = (index, fromUser = false) => {
+    if (fromUser) cancelDemo();
+    grid.classList.add('has-stage');
+    stages.forEach((stage, i) => stage.classList.toggle('is-active', i === index));
+    assets.forEach((asset, i) => asset.classList.toggle('is-match', matches[index].includes(i)));
+    hub.classList.add('is-pulsing');
+    const fit = matches[index].map(i => assetNames[i]).join(' + ');
+    note.innerHTML = `<strong>Stage → asset fit</strong><span><em>${stageNames[index]}</em> often calls for ${fit}.</span>`;
+  };
+
+  const clearStage = () => {
+    grid.classList.remove('has-stage');
+    stages.forEach(stage => stage.classList.remove('is-active'));
+    assets.forEach(asset => asset.classList.remove('is-match'));
+    hub.classList.remove('is-pulsing');
+    note.innerHTML = '<strong>Stage → asset fit</strong><span>Hover, focus, or tap a buyer stage to see which asset types fit that job.</span>';
+  };
+
+  const runDemo = () => {
+    if (demoPlayed) return;
+    demoPlayed = true;
+    if (reduceMotion.matches || document.documentElement.classList.contains('boring-mode')) {
+      clearStage();
+      return;
+    }
+    stages.forEach((_, index) => {
+      demoTimers.push(setTimeout(() => showStage(index), index * 680));
+    });
+    demoTimers.push(setTimeout(clearStage, stages.length * 680 + 360));
+  };
+
+  stages.forEach((stage, index) => {
+    stage.addEventListener('pointerenter', event => {
+      if (event.pointerType === 'mouse') showStage(index, true);
+    });
+    stage.addEventListener('pointerleave', event => {
+      if (event.pointerType === 'mouse') clearStage();
+    });
+    stage.addEventListener('focus', () => showStage(index, true));
+    stage.addEventListener('blur', clearStage);
+    stage.addEventListener('click', () => showStage(index, true));
+  });
+
+  document.addEventListener('pointerdown', event => {
+    if (!grid.contains(event.target)) clearStage();
+  });
+
+  const observer = new IntersectionObserver(entries => {
+    if (entries.some(entry => entry.isIntersecting)) {
+      runDemo();
+      observer.disconnect();
+    }
+  }, { threshold: .3 });
+  observer.observe(grid);
+
+  reduceMotion.addEventListener?.('change', event => {
+    if (event.matches) {
+      cancelDemo();
+      clearStage();
+    }
+  });
+  window.addEventListener('portfolio:boringchange', () => {
+    if (document.documentElement.classList.contains('boring-mode')) {
+      cancelDemo();
+      clearStage();
+    }
+  });
+})();
