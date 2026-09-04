@@ -31,3 +31,29 @@
   .strategy-plan-output{opacity:1;transform:none}
 }
 html.boring-mode .strategy-motion-shell .strategy-node,html.boring-mode .strategy-motion-lines path,html.boring-mode .strategy-plan-output{transition:none!important}
+
+/* Strategy page: buyer stage changes the right asset */
+.strategy-asset-motion{position:relative}
+.strategy-asset-motion .funnel>div{position:relative;transition:border-color .2s ease,background-color .2s ease,transform .2s ease,opacity .2s ease;cursor:default}
+.strategy-asset-motion .funnel>div.is-active{border-color:var(--ink);background:#edf1ed;transform:translateX(4px)}
+.strategy-asset-motion .funnel>div:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.strategy-asset-motion .cluster .node,.strategy-asset-motion .cluster .hub{transition:border-color .22s ease,background-color .22s ease,transform .22s ease,opacity .22s ease}
+.strategy-asset-motion .cluster .node{opacity:.46}
+.strategy-asset-motion .cluster .node.is-match{opacity:1;border-color:var(--sage);background:#edf1ed}
+.strategy-asset-motion .cluster .node.is-match.n5{transform:translateX(-50%) translateY(-3px)}
+.strategy-asset-motion .cluster .node.is-match:not(.n5){transform:translateY(-3px)}
+.strategy-asset-motion .cluster .hub.is-pulsing{border-color:var(--ink);background:#dfe7e0}
+.strategy-asset-note{grid-column:1/-1;display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:baseline;margin-top:0;padding:11px 13px;border-top:1px solid var(--line);color:var(--slate);font-size:.67rem;line-height:1.5}
+.strategy-asset-note strong{color:var(--sage);font-size:.58rem;letter-spacing:.09em;text-transform:uppercase}
+.strategy-asset-note span{color:var(--slate)}
+.strategy-asset-note em{font-style:normal;color:var(--ink);font-weight:600}
+@media(max-width:700px){
+  .strategy-asset-note{grid-template-columns:1fr;gap:3px}
+  .strategy-asset-motion .funnel>div.is-active{transform:none}
+  .strategy-asset-motion .cluster .node.is-match.n5{transform:translateX(-50%)}
+  .strategy-asset-motion .cluster .node.is-match:not(.n5){transform:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .strategy-asset-motion .funnel>div,.strategy-asset-motion .cluster .node,.strategy-asset-motion .cluster .hub{transition:none!important}
+}
+html.boring-mode .strategy-asset-motion .funnel>div,html.boring-mode .strategy-asset-motion .cluster .node,html.boring-mode .strategy-asset-motion .cluster .hub{transition:none!important}
