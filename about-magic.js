@@ -101,7 +101,7 @@
       ctx.fill();
     });
 
-    if (particles.length && visible && (pointerInside || lumos)) start();
+    if (particles.length && visible) start();
   };
 
   function start() {
@@ -144,7 +144,7 @@
     lumos = state;
     board.classList.toggle('is-lumos', state);
     board.classList.toggle('is-lit', state || pointerInside);
-    facts.forEach(fact => fact.classList.toggle('is-revealed', state || fact.classList.contains('is-revealed')));
+    facts.forEach(fact => fact.classList.toggle('is-revealed', state));
     if (trigger) {
       trigger.setAttribute('aria-pressed', String(state));
       trigger.textContent = state ? 'Nox' : 'Lumos?';
