@@ -1,0 +1,80 @@
+name: Fix homepage visual previews
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-homepage-visual-previews.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Confirm main has not changed
+        run: |
+          git fetch origin main
+          LATEST="$(git rev-parse origin/main)"
+          BASE="$(git rev-parse HEAD)"
+          echo "Latest main SHA: $LATEST"
+          echo "Checked-out SHA: $BASE"
+          if [ "$LATEST" != "$BASE" ]; then
+            echo "main changed before the homepage preview fix; refusing to continue"
+            exit 1
+          fi
+
+      - name: Fix homepage preview paths
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('index.html')
+          html = path.read_text(encoding='utf-8')
+          replacements = {
+              '/work-previews/digitalapi-vs-mulesoft.png': '/work-previews/digitalapi-vs-mulesoft-01.webp',
+              '/work-previews/apty-ai.png': '/work-previews/apty-ai-01.webp',
+              '/work-previews/learniverse-home.png': '/work-previews/learniverse-home-01.webp',
+          }
+          for old, new in replacements.items():
+              if html.count(old) != 1:
+                  raise SystemExit(f'Expected exactly one homepage reference to {old}')
+              html = html.replace(old, new, 1)
+          path.write_text(html, encoding='utf-8')
+          PY
+
+      - name: Validate homepage previews
+        run: |
+          ! grep -q '/work-previews/digitalapi-vs-mulesoft.png' index.html
+          ! grep -q '/work-previews/apty-ai.png' index.html
+          ! grep -q '/work-previews/learniverse-home.png' index.html
+          grep -q '/work-previews/digitalapi-vs-mulesoft-01.webp' index.html
+          grep -q '/work-previews/apty-ai-01.webp' index.html
+          grep -q '/work-previews/learniverse-home-01.webp' index.html
+          test -f work-previews/digitalapi-vs-mulesoft-01.webp
+          test -f work-previews/apty-ai-01.webp
+          test -f work-previews/learniverse-home-01.webp
+          grep -q '<strong>5 years</strong>' index.html
+          grep -q '/hero-shatter.js?v=2' index.html
+
+      - name: Commit fix and remove one-off workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          LATEST="$(git rev-parse origin/main)"
+          BASE="$(git rev-parse HEAD)"
+          echo "Latest main SHA: $LATEST"
+          echo "Checked-out SHA: $BASE"
+          if [ "$LATEST" != "$BASE" ]; then
+            echo "main changed while preparing the homepage preview fix; refusing to overwrite it"
+            exit 1
+          fi
+          rm .github/workflows/fix-homepage-visual-previews.yml
+          git add index.html .github/workflows/fix-homepage-visual-previews.yml
+          git commit -m "Fix homepage visual work previews"
+          git push origin HEAD:main
