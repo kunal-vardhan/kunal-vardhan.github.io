@@ -1,0 +1,75 @@
+name: One-off case proof shortcut patch
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/one-off-case-proof-shortcuts.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify main is unchanged
+        run: |
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+      - name: Add proof shortcuts
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          replacements = {
+              'case-studies/api-organic-growth.html': (
+                  '<div class="case-page-metrics"><div><strong>Content strategy + execution</strong><span>my role</span></div><div><strong>API / developer audience</strong><span>subject area</span></div><div><strong>29 → 3,842</strong><span>Organic Search sessions · Jan–Sep 2025</span></div></div>',
+                  '<div class="case-page-metrics"><div><strong>Content strategy + execution</strong><span>my role</span></div><div><strong>API / developer audience</strong><span>subject area</span></div><div><strong>29 → 3,842</strong><span>Organic Search sessions · Jan–Sep 2025</span></div></div><div class="case-proof-shortcut"><span>First-party GA4 + Ahrefs evidence</span><a href="#result">View the proof ↓</a></div>'
+              ),
+              'case-studies/logistics-search-growth.html': (
+                  '<div class="case-page-metrics"><div><strong>Research + content execution</strong><span>my role</span></div><div><strong>Education → evaluation</strong><span>range of intent</span></div><div><strong>2.7K + #1 rankings</strong><span>selected Ahrefs evidence</span></div></div>',
+                  '<div class="case-page-metrics"><div><strong>Research + content execution</strong><span>my role</span></div><div><strong>Education → evaluation</strong><span>range of intent</span></div><div><strong>2.7K + #1 rankings</strong><span>selected Ahrefs evidence</span></div></div><div class="case-proof-shortcut"><span>Ahrefs page-level evidence</span><a href="#results">View the proof ↓</a></div>'
+              ),
+              'case-studies/enterprise-software-content.html': (
+                  '<div class="case-page-metrics"><div><strong>Research + B2B content</strong><span>my role</span></div><div><strong>Education → commercial intent</strong><span>content range</span></div><div><strong>#1 ranking</strong><span>ServiceNow implementation cost</span></div></div>',
+                  '<div class="case-page-metrics"><div><strong>Research + B2B content</strong><span>my role</span></div><div><strong>Education → commercial intent</strong><span>content range</span></div><div><strong>#1 ranking</strong><span>ServiceNow implementation cost</span></div></div><div class="case-proof-shortcut"><span>Ahrefs ranking evidence</span><a href="#results">View the proof ↓</a></div>'
+              ),
+              'case-studies/learniverse-growth.html': (
+                  '<div class="case-page-metrics"><div><strong>Organic content</strong><span>my contribution</span></div><div><strong>Built from scratch</strong><span>starting point</span></div><div><strong>0 → ~2,500</strong><span>monthly organic visits</span></div></div>',
+                  '<div class="case-page-metrics"><div><strong>Organic content</strong><span>my contribution</span></div><div><strong>Built from scratch</strong><span>starting point</span></div><div><strong>0 → ~2,500</strong><span>monthly organic visits</span></div></div><div class="case-proof-shortcut case-proof-shortcut-limited"><span>Result stated conservatively · historical analytics no longer retained</span><a href="#result">See what I can verify ↓</a></div>'
+              ),
+          }
+
+          for filename, (old, new) in replacements.items():
+              path = Path(filename)
+              text = path.read_text()
+              if old not in text:
+                  raise SystemExit(f'Expected hero metrics block not found in {filename}')
+              path.write_text(text.replace(old, new, 1))
+
+          css = Path('case-study-layout.css')
+          css_text = css.read_text()
+          marker = '/* Hero proof shortcuts */'
+          if marker in css_text:
+              raise SystemExit('Proof shortcut styles already present')
+          css_text += '''\n\n/* Hero proof shortcuts */\n.case-proof-shortcut{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:.67rem;line-height:1.45}\n.case-proof-shortcut>span{color:var(--slate)}\n.case-proof-shortcut>a{flex:0 0 auto;color:var(--sage);font-weight:700}\n.case-proof-shortcut>a:hover{text-decoration:underline;text-underline-offset:4px}\n.case-proof-shortcut-limited>span{max-width:620px}\n@media(max-width:700px){.case-proof-shortcut{align-items:flex-start;flex-direction:column;gap:5px}}\n'''
+          css.write_text(css_text)
+
+          story = Path('story.js')
+          story_text = story.read_text()
+          old_ref = "caseStyles.href='/case-study-layout.css?v=1'"
+          new_ref = "caseStyles.href='/case-study-layout.css?v=2'"
+          if old_ref not in story_text:
+              raise SystemExit('Expected case-study layout CSS cache reference not found')
+          story.write_text(story_text.replace(old_ref, new_ref, 1))
+          PY
+      - name: Commit and push
+        run: |
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          git config user.name "Kunal Vardhan"
+          git config user.email "kunalwritescopy@gmail.com"
+          git add case-studies/api-organic-growth.html case-studies/logistics-search-growth.html case-studies/enterprise-software-content.html case-studies/learniverse-growth.html case-study-layout.css story.js
+          git commit -m "Add proof shortcuts to case study heroes"
+          git push origin HEAD:main
