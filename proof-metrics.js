@@ -7,47 +7,55 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
 
   const strongs=[...row.querySelectorAll('strong')];
-  if(strongs.length<2)return;
+  if(strongs.length<3)return;
 
   const configs=[
-    {el:strongs[0],start:29,end:3842,prefix:'',duration:1750,label:'DigitalAPI Organic Search sessions increased from 29 to 3,842'},
-    {el:strongs[1],start:0,end:2500,prefix:'~',duration:1500,label:'Learniverse monthly organic visits increased from 0 to approximately 2,500'}
+    {el:strongs[0],start:29,end:3842,prefix:'',suffix:'',duration:1750,delay:0,showStart:true,label:'DigitalAPI Organic Search sessions increased from 29 to 3,842'},
+    {el:strongs[1],start:0,end:2500,prefix:'~',suffix:'',duration:1500,delay:260,showStart:true,label:'Learniverse monthly organic visits increased from 0 to approximately 2,500'},
+    {el:strongs[2],start:0,end:5,prefix:'',suffix:' years',duration:1150,delay:520,showStart:false,label:'5 years across full-time and independent content work'}
   ];
 
   const style=document.createElement('style');
   style.textContent=`
-    .hero-proof strong.proof-live{--proof-progress:1;position:relative;display:flex;align-items:baseline;gap:.18em;width:max-content;max-width:100%;padding-bottom:5px;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;transition:opacity .18s ease,transform .18s ease}
-    .hero-proof strong.proof-live::after{content:"";position:absolute;left:0;bottom:0;width:100%;height:1px;background:var(--sand);transform:scaleX(var(--proof-progress));transform-origin:left center;opacity:.62;will-change:transform}
+    .hero-proof strong.proof-live{position:relative;display:flex;align-items:baseline;gap:.18em;width:max-content;max-width:100%;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;transition:opacity .18s ease,transform .18s ease}
     .proof-live-start,.proof-live-arrow,.proof-live-number{display:inline-block!important;margin:0!important;color:inherit!important;font:inherit!important;line-height:inherit!important}
     .proof-live-arrow{color:var(--sage)!important}
     .proof-live-number{min-width:5.2ch}
+    .hero-proof strong.proof-live.proof-years .proof-live-number{min-width:6.1ch}
     .hero-proof strong.proof-live.is-resetting{opacity:.38;transform:translateY(2px)}
-    @media(max-width:520px){.proof-live-number{min-width:4.8ch}}
+    @media(max-width:520px){.proof-live-number{min-width:4.8ch}.hero-proof strong.proof-live.proof-years .proof-live-number{min-width:5.8ch}}
   `;
   document.head.appendChild(style);
 
   const fmt=value=>Math.round(value).toLocaleString('en-US');
 
-  configs.forEach(cfg=>{
+  configs.forEach((cfg,index)=>{
     cfg.el.classList.add('proof-live');
+    if(index===2)cfg.el.classList.add('proof-years');
     cfg.el.setAttribute('aria-label',cfg.label);
 
-    const start=document.createElement('span');
-    start.className='proof-live-start';
-    start.setAttribute('aria-hidden','true');
-    start.textContent=fmt(cfg.start);
+    const parts=[];
+    if(cfg.showStart){
+      const start=document.createElement('span');
+      start.className='proof-live-start';
+      start.setAttribute('aria-hidden','true');
+      start.textContent=fmt(cfg.start);
+      parts.push(start);
 
-    const arrow=document.createElement('span');
-    arrow.className='proof-live-arrow';
-    arrow.setAttribute('aria-hidden','true');
-    arrow.textContent='→';
+      const arrow=document.createElement('span');
+      arrow.className='proof-live-arrow';
+      arrow.setAttribute('aria-hidden','true');
+      arrow.textContent='→';
+      parts.push(arrow);
+    }
 
     const number=document.createElement('span');
     number.className='proof-live-number';
     number.setAttribute('aria-hidden','true');
-    number.textContent=`${cfg.prefix}${fmt(cfg.end)}`;
+    number.textContent=`${cfg.prefix}${fmt(cfg.end)}${cfg.suffix}`;
+    parts.push(number);
 
-    cfg.el.replaceChildren(start,arrow,number);
+    cfg.el.replaceChildren(...parts);
     cfg.number=number;
   });
 
@@ -70,19 +78,18 @@ document.addEventListener('DOMContentLoaded',()=>{
     frames.clear();
   };
 
-  const setValue=(cfg,value,progress)=>{
-    cfg.number.textContent=`${cfg.prefix}${fmt(value)}`;
-    cfg.el.style.setProperty('--proof-progress',String(progress));
+  const setValue=(cfg,value)=>{
+    cfg.number.textContent=`${cfg.prefix}${fmt(value)}${cfg.suffix}`;
   };
 
   const setFinal=()=>{
     configs.forEach(cfg=>{
       cfg.el.classList.remove('is-resetting');
-      setValue(cfg,cfg.end,1);
+      setValue(cfg,cfg.end);
     });
   };
 
-  const animate=(cfg,delay,token)=>{
+  const animate=(cfg,token)=>{
     later(()=>{
       if(!visible||document.hidden||token!==cycleToken)return;
       const started=performance.now();
@@ -90,17 +97,17 @@ document.addEventListener('DOMContentLoaded',()=>{
         if(!visible||document.hidden||token!==cycleToken)return;
         const raw=Math.min(1,(now-started)/cfg.duration);
         const eased=1-Math.pow(1-raw,4);
-        setValue(cfg,cfg.start+(cfg.end-cfg.start)*eased,eased);
+        setValue(cfg,cfg.start+(cfg.end-cfg.start)*eased);
         if(raw<1){
           const id=requestAnimationFrame(tick);
           frames.add(id);
         }else{
-          setValue(cfg,cfg.end,1);
+          setValue(cfg,cfg.end);
         }
       };
       const id=requestAnimationFrame(tick);
       frames.add(id);
-    },delay);
+    },cfg.delay);
   };
 
   const runCycle=()=>{
@@ -110,13 +117,12 @@ document.addEventListener('DOMContentLoaded',()=>{
     configs.forEach(cfg=>cfg.el.classList.add('is-resetting'));
     later(()=>{
       if(token!==cycleToken||!visible)return;
-      configs.forEach(cfg=>setValue(cfg,cfg.start,0));
+      configs.forEach(cfg=>setValue(cfg,cfg.start));
     },170);
     later(()=>{
       if(token!==cycleToken||!visible)return;
       configs.forEach(cfg=>cfg.el.classList.remove('is-resetting'));
-      animate(configs[0],0,token);
-      animate(configs[1],260,token);
+      configs.forEach(cfg=>animate(cfg,token));
     },360);
 
     later(()=>{
