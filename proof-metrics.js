@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
 
+  const isBoring=()=>document.documentElement.classList.contains('boring-mode');
   const strongs=[...row.querySelectorAll('strong')];
   if(strongs.length<3)return;
 
@@ -23,6 +24,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     .proof-live-number{min-width:5.2ch}
     .hero-proof strong.proof-live.proof-years .proof-live-number{min-width:6.1ch}
     .hero-proof strong.proof-live.is-resetting{opacity:.38;transform:translateY(2px)}
+    html.boring-mode .hero-proof strong.proof-live{opacity:1!important;transform:none!important;transition:none!important}
     @media(max-width:520px){.proof-live-number{min-width:4.8ch}.hero-proof strong.proof-live.proof-years .proof-live-number{min-width:5.8ch}}
   `;
   document.head.appendChild(style);
@@ -91,10 +93,10 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   const animate=(cfg,token)=>{
     later(()=>{
-      if(!visible||document.hidden||token!==cycleToken)return;
+      if(!visible||document.hidden||isBoring()||token!==cycleToken)return;
       const started=performance.now();
       const tick=now=>{
-        if(!visible||document.hidden||token!==cycleToken)return;
+        if(!visible||document.hidden||isBoring()||token!==cycleToken)return;
         const raw=Math.min(1,(now-started)/cfg.duration);
         const eased=1-Math.pow(1-raw,4);
         setValue(cfg,cfg.start+(cfg.end-cfg.start)*eased);
@@ -111,22 +113,25 @@ document.addEventListener('DOMContentLoaded',()=>{
   };
 
   const runCycle=()=>{
-    if(!visible||document.hidden)return;
+    if(!visible||document.hidden||isBoring()){
+      setFinal();
+      return;
+    }
     const token=++cycleToken;
 
     configs.forEach(cfg=>cfg.el.classList.add('is-resetting'));
     later(()=>{
-      if(token!==cycleToken||!visible)return;
+      if(token!==cycleToken||!visible||isBoring())return;
       configs.forEach(cfg=>setValue(cfg,cfg.start));
     },170);
     later(()=>{
-      if(token!==cycleToken||!visible)return;
+      if(token!==cycleToken||!visible||isBoring())return;
       configs.forEach(cfg=>cfg.el.classList.remove('is-resetting'));
       configs.forEach(cfg=>animate(cfg,token));
     },360);
 
     later(()=>{
-      if(token===cycleToken&&visible&&!document.hidden)runCycle();
+      if(token===cycleToken&&visible&&!document.hidden&&!isBoring())runCycle();
     },9600);
   };
 
@@ -134,12 +139,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(value===visible)return;
     visible=value;
     cancelWork();
-    if(visible&&!document.hidden){
-      setFinal();
-      later(runCycle,520);
-    }else{
-      setFinal();
-    }
+    setFinal();
+    if(visible&&!document.hidden&&!isBoring())later(runCycle,520);
   };
 
   if('IntersectionObserver' in window){
@@ -154,11 +155,13 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   document.addEventListener('visibilitychange',()=>{
     cancelWork();
-    if(document.hidden){
-      setFinal();
-    }else if(visible){
-      setFinal();
-      later(runCycle,500);
-    }
+    setFinal();
+    if(!document.hidden&&visible&&!isBoring())later(runCycle,500);
+  });
+
+  window.addEventListener('portfolio:boringchange',event=>{
+    cancelWork();
+    setFinal();
+    if(!event.detail?.boring&&visible&&!document.hidden)later(runCycle,420);
   });
 });
