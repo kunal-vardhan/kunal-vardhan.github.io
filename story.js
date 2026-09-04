@@ -48,6 +48,19 @@ document.addEventListener('DOMContentLoaded',()=>{
     observer.observe(strip);
   }
   const frame=(now)=>{
+    if(document.documentElement.classList.contains('boring-mode')){
+      offset=0;
+      velocity=-18;
+      impulse=0;
+      track.style.transform='translate3d(0,0,0)';
+      const resume=event=>{
+        if(event.detail?.boring)return;
+        lastTime=performance.now();
+        requestAnimationFrame(frame);
+      };
+      window.addEventListener('portfolio:boringchange',resume,{once:true});
+      return;
+    }
     const dt=Math.min(.05,(now-lastTime)/1000);
     lastTime=now;
     if(visible&&groupWidth>0){
