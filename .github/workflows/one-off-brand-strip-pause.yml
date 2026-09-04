@@ -1,0 +1,62 @@
+name: One-off brand strip pause patch
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/one-off-brand-strip-pause.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify main is unchanged
+        run: |
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+      - name: Pause brand strip animation offscreen
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          story = Path('story.js')
+          text = story.read_text()
+          start = text.index('/* homepage brand marquee motion */')
+          end = text.index('/* homepage workflow with opinions */')
+          block = text[start:end]
+
+          old_scroll = """  const onScroll=()=>{\n    const y=window.scrollY;\n    const delta=y-lastScroll;\n    lastScroll=y;\n    impulse=Math.max(-150,Math.min(150,impulse-delta*1.7));\n  };"""
+          new_scroll = """  const onScroll=()=>{\n    const y=window.scrollY;\n    if(!visible){lastScroll=y;return;}\n    const delta=y-lastScroll;\n    lastScroll=y;\n    impulse=Math.max(-150,Math.min(150,impulse-delta*1.7));\n  };"""
+          if old_scroll not in block:
+              raise SystemExit('Expected brand-strip scroll handler not found')
+          block = block.replace(old_scroll, new_scroll, 1)
+
+          old_loop = """  if('IntersectionObserver' in window){\n    const observer=new IntersectionObserver(entries=>{visible=entries[0]?.isIntersecting??true;},{threshold:0});\n    observer.observe(strip);\n  }\n  const frame=(now)=>{\n    if(document.documentElement.classList.contains('boring-mode')){\n      offset=0;\n      velocity=-18;\n      impulse=0;\n      track.style.transform='translate3d(0,0,0)';\n      const resume=event=>{\n        if(event.detail?.boring)return;\n        lastTime=performance.now();\n        requestAnimationFrame(frame);\n      };\n      window.addEventListener('portfolio:boringchange',resume,{once:true});\n      return;\n    }\n    const dt=Math.min(.05,(now-lastTime)/1000);\n    lastTime=now;\n    if(visible&&groupWidth>0){\n      impulse*=Math.exp(-4.2*dt);\n      const resting=hovering?-1.5:-18;\n      const target=resting+impulse;\n      velocity+=(target-velocity)*Math.min(1,6*dt);\n      offset+=velocity*dt;\n      while(offset<=-groupWidth)offset+=groupWidth;\n      while(offset>0)offset-=groupWidth;\n      track.style.transform=`translate3d(${offset.toFixed(2)}px,0,0)`;\n    }\n    requestAnimationFrame(frame);\n  };\n  requestAnimationFrame(frame);"""
+
+          new_loop = """  let rafId=0;\n  let waitingForBoring=false;\n  const stopFrame=()=>{\n    if(rafId){cancelAnimationFrame(rafId);rafId=0;}\n  };\n  const scheduleFrame=()=>{\n    if(!rafId&&visible&&!document.documentElement.classList.contains('boring-mode'))rafId=requestAnimationFrame(frame);\n  };\n  if('IntersectionObserver' in window){\n    const observer=new IntersectionObserver(entries=>{\n      const nextVisible=entries[0]?.isIntersecting??true;\n      if(nextVisible===visible)return;\n      visible=nextVisible;\n      if(!visible){stopFrame();return;}\n      lastTime=performance.now();\n      scheduleFrame();\n    },{threshold:0});\n    observer.observe(strip);\n  }\n  const frame=(now)=>{\n    rafId=0;\n    if(document.documentElement.classList.contains('boring-mode')){\n      offset=0;\n      velocity=-18;\n      impulse=0;\n      track.style.transform='translate3d(0,0,0)';\n      if(!waitingForBoring){\n        waitingForBoring=true;\n        const resume=event=>{\n          if(event.detail?.boring)return;\n          waitingForBoring=false;\n          window.removeEventListener('portfolio:boringchange',resume);\n          lastTime=performance.now();\n          scheduleFrame();\n        };\n        window.addEventListener('portfolio:boringchange',resume);\n      }\n      return;\n    }\n    if(!visible)return;\n    const dt=Math.min(.05,(now-lastTime)/1000);\n    lastTime=now;\n    if(groupWidth>0){\n      impulse*=Math.exp(-4.2*dt);\n      const resting=hovering?-1.5:-18;\n      const target=resting+impulse;\n      velocity+=(target-velocity)*Math.min(1,6*dt);\n      offset+=velocity*dt;\n      while(offset<=-groupWidth)offset+=groupWidth;\n      while(offset>0)offset-=groupWidth;\n      track.style.transform=`translate3d(${offset.toFixed(2)}px,0,0)`;\n    }\n    scheduleFrame();\n  };\n  scheduleFrame();"""
+
+          if old_loop not in block:
+              raise SystemExit('Expected brand-strip animation loop not found')
+          block = block.replace(old_loop, new_loop, 1)
+          story.write_text(text[:start] + block + text[end:])
+
+          index = Path('index.html')
+          html = index.read_text()
+          old_ref = '<script src="/story.js?v=9" defer></script>'
+          new_ref = '<script src="/story.js?v=10" defer></script>'
+          if old_ref not in html:
+              raise SystemExit('Expected story.js?v=9 reference not found')
+          index.write_text(html.replace(old_ref, new_ref, 1))
+          PY
+      - name: Commit and push
+        run: |
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          git config user.name "Kunal Vardhan"
+          git config user.email "kunalwritescopy@gmail.com"
+          git add story.js index.html
+          git commit -m "Pause brand strip animation offscreen"
+          git push origin HEAD:main
