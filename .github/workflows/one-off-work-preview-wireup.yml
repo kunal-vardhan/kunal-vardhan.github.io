@@ -1,0 +1,46 @@
+name: One-off Work Library preview wireup
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/one-off-work-preview-wireup.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify main is unchanged
+        run: |
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+      - name: Wire Work Library preview assets
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('work.html')
+          text = path.read_text()
+          css_old = '<link rel="stylesheet" href="/ebook-library.css?v=3">'
+          css_new = css_old + '\n<link rel="stylesheet" href="/work-preview-motion.css?v=1">'
+          js_old = '<script src="/story.js?v=4" defer></script>'
+          js_new = js_old + '\n<script src="/ebook-preview-motion.js?v=1" defer></script>'
+          if css_old not in text:
+              raise SystemExit('Expected ebook-library stylesheet reference not found')
+          if js_old not in text:
+              raise SystemExit('Expected story.js?v=4 reference not found')
+          text = text.replace(css_old, css_new, 1)
+          text = text.replace(js_old, js_new, 1)
+          path.write_text(text)
+          PY
+      - name: Commit and push
+        run: |
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          git config user.name "Kunal Vardhan"
+          git config user.email "kunalwritescopy@gmail.com"
+          git add work.html
+          git commit -m "Enable scrollbar-free eBook preview motion"
+          git push origin HEAD:main
