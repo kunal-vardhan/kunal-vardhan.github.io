@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   const refreshWidth=()=>{groupWidth=group.getBoundingClientRect().width||groupWidth;};
   const onScroll=()=>{
     const y=window.scrollY;
+    if(!visible){lastScroll=y;return;}
     const delta=y-lastScroll;
     lastScroll=y;
     impulse=Math.max(-150,Math.min(150,impulse-delta*1.7));
@@ -43,27 +44,49 @@ document.addEventListener('DOMContentLoaded',()=>{
     strip.addEventListener('pointerenter',()=>{hovering=true;});
     strip.addEventListener('pointerleave',()=>{hovering=false;});
   }
+  let rafId=0;
+  let waitingForBoring=false;
+  const stopFrame=()=>{
+    if(rafId){cancelAnimationFrame(rafId);rafId=0;}
+  };
+  const scheduleFrame=()=>{
+    if(!rafId&&visible&&!document.documentElement.classList.contains('boring-mode'))rafId=requestAnimationFrame(frame);
+  };
   if('IntersectionObserver' in window){
-    const observer=new IntersectionObserver(entries=>{visible=entries[0]?.isIntersecting??true;},{threshold:0});
+    const observer=new IntersectionObserver(entries=>{
+      const nextVisible=entries[0]?.isIntersecting??true;
+      if(nextVisible===visible)return;
+      visible=nextVisible;
+      if(!visible){stopFrame();return;}
+      lastTime=performance.now();
+      scheduleFrame();
+    },{threshold:0});
     observer.observe(strip);
   }
   const frame=(now)=>{
+    rafId=0;
     if(document.documentElement.classList.contains('boring-mode')){
       offset=0;
       velocity=-18;
       impulse=0;
       track.style.transform='translate3d(0,0,0)';
-      const resume=event=>{
-        if(event.detail?.boring)return;
-        lastTime=performance.now();
-        requestAnimationFrame(frame);
-      };
-      window.addEventListener('portfolio:boringchange',resume,{once:true});
+      if(!waitingForBoring){
+        waitingForBoring=true;
+        const resume=event=>{
+          if(event.detail?.boring)return;
+          waitingForBoring=false;
+          window.removeEventListener('portfolio:boringchange',resume);
+          lastTime=performance.now();
+          scheduleFrame();
+        };
+        window.addEventListener('portfolio:boringchange',resume);
+      }
       return;
     }
+    if(!visible)return;
     const dt=Math.min(.05,(now-lastTime)/1000);
     lastTime=now;
-    if(visible&&groupWidth>0){
+    if(groupWidth>0){
       impulse*=Math.exp(-4.2*dt);
       const resting=hovering?-1.5:-18;
       const target=resting+impulse;
@@ -73,9 +96,9 @@ document.addEventListener('DOMContentLoaded',()=>{
       while(offset>0)offset-=groupWidth;
       track.style.transform=`translate3d(${offset.toFixed(2)}px,0,0)`;
     }
-    requestAnimationFrame(frame);
+    scheduleFrame();
   };
-  requestAnimationFrame(frame);
+  scheduleFrame();
 });
 /* homepage workflow with opinions */
 document.addEventListener('DOMContentLoaded',()=>{
