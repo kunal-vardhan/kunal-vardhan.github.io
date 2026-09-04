@@ -38,7 +38,8 @@ html.boring-mode .strategy-motion-shell .strategy-node,html.boring-mode .strateg
 .strategy-asset-motion .funnel>div.is-active{border-color:var(--ink);background:#edf1ed;transform:translateX(4px)}
 .strategy-asset-motion .funnel>div:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .strategy-asset-motion .cluster .node,.strategy-asset-motion .cluster .hub{transition:border-color .22s ease,background-color .22s ease,transform .22s ease,opacity .22s ease}
-.strategy-asset-motion .cluster .node{opacity:.46}
+.strategy-asset-motion .cluster .node{opacity:1}
+.strategy-asset-motion.has-stage .cluster .node{opacity:.36}
 .strategy-asset-motion .cluster .node.is-match{opacity:1;border-color:var(--sage);background:#edf1ed}
 .strategy-asset-motion .cluster .node.is-match.n5{transform:translateX(-50%) translateY(-3px)}
 .strategy-asset-motion .cluster .node.is-match:not(.n5){transform:translateY(-3px)}
