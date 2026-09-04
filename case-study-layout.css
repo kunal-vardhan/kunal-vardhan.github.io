@@ -24,3 +24,12 @@
   .case-flow-step{min-height:0}
   .cluster-hub,.cluster-node.n5{grid-column:1}
 }
+
+
+/* Hero proof shortcuts */
+.case-proof-shortcut{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:.67rem;line-height:1.45}
+.case-proof-shortcut>span{color:var(--slate)}
+.case-proof-shortcut>a{flex:0 0 auto;color:var(--sage);font-weight:700}
+.case-proof-shortcut>a:hover{text-decoration:underline;text-underline-offset:4px}
+.case-proof-shortcut-limited>span{max-width:620px}
+@media(max-width:700px){.case-proof-shortcut{align-items:flex-start;flex-direction:column;gap:5px}}
