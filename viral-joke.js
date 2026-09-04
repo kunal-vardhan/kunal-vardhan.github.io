@@ -1,9 +1,63 @@
-document.addEventListener('DOMContentLoaded',()=>{
-  const copy=document.querySelector('.teaser-split > div:first-child');
-  if(!copy||copy.querySelector('.viral-joke'))return;
+const portfolioBoringKey='kv-portfolio-boring';
+try{
+  if(localStorage.getItem(portfolioBoringKey)==='1')document.documentElement.classList.add('boring-mode');
+}catch{}
 
+document.addEventListener('DOMContentLoaded',()=>{
+  const isBoring=()=>document.documentElement.classList.contains('boring-mode');
   const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const finePointer=window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+
+  const toggleStyle=document.createElement('style');
+  toggleStyle.textContent=`
+    .boring-bar{border-top:1px solid var(--line);background:var(--surface)}
+    .boring-bar-inner{display:flex;align-items:center;justify-content:center;gap:10px;min-height:68px;text-align:center;flex-wrap:wrap}
+    .boring-bar-kicker{color:var(--slate);font-size:.64rem;font-weight:600}
+    .boring-toggle{appearance:none;border:1px solid var(--ink);background:transparent;color:var(--ink);padding:7px 10px;font:700 .67rem Inter,sans-serif;cursor:pointer}
+    .boring-toggle:hover{background:var(--ink);color:var(--paper)}
+    .boring-toggle:focus-visible{outline:2px solid var(--sage);outline-offset:3px}
+    .boring-status{min-width:9.8em;color:var(--sage);font-size:.62rem;font-weight:600}
+    html.boring-mode .wordmark-track{transform:none!important}
+    html.boring-mode .wordmark-track>.wordmark-group[aria-hidden="true"]{display:none!important}
+    html.boring-mode .feature-grid>.feature-card .feature-visual *{animation:none!important;transform:none!important}
+    html.boring-mode .visual-teaser-shot img{transform:none!important;transition:none!important;will-change:auto!important}
+    html.boring-mode .visual-teaser-shot::after{display:none!important}
+    html.boring-mode .mini-map svg .workflow-node-hit,html.boring-mode .mini-map .workflow-whisper{transform:none!important;transition:none!important}
+    html.boring-mode .viral-joke-button{transform:translate3d(0,0,0)!important;transition:none!important}
+    @media(max-width:620px){.boring-bar-inner{padding-top:12px;padding-bottom:12px}}
+  `;
+  document.head.appendChild(toggleStyle);
+
+  const footer=document.querySelector('.site-footer');
+  if(footer&&!document.querySelector('.boring-bar')){
+    const bar=document.createElement('section');
+    bar.className='boring-bar';
+    bar.setAttribute('aria-label','Website motion preference');
+    bar.innerHTML=`<div class="container boring-bar-inner"><span class="boring-bar-kicker">Too much personality?</span><button class="boring-toggle" type="button"></button><span class="boring-status" aria-live="polite"></span></div>`;
+    footer.parentNode.insertBefore(bar,footer);
+
+    const toggle=bar.querySelector('.boring-toggle');
+    const status=bar.querySelector('.boring-status');
+
+    const paint=(boring,announce=false)=>{
+      toggle.textContent=boring?'Bring the fun back':'Make this website boring';
+      status.textContent=boring?'There. Very professional.':announce?'Okay, the fun is back.':'';
+      toggle.setAttribute('aria-pressed',String(boring));
+    };
+
+    const setBoring=(boring,announce=true)=>{
+      document.documentElement.classList.toggle('boring-mode',boring);
+      try{localStorage.setItem(portfolioBoringKey,boring?'1':'0');}catch{}
+      paint(boring,announce);
+      window.dispatchEvent(new CustomEvent('portfolio:boringchange',{detail:{boring}}));
+    };
+
+    paint(isBoring());
+    toggle.addEventListener('click',()=>setBoring(!isBoring()));
+  }
+
+  const copy=document.querySelector('.teaser-split > div:first-child');
+  if(!copy||copy.querySelector('.viral-joke'))return;
 
   const wrap=document.createElement('div');
   wrap.className='viral-joke';
@@ -71,11 +125,24 @@ document.addEventListener('DOMContentLoaded',()=>{
   };
 
   const render=()=>{
-    const angle=Math.max(-4,Math.min(4,vel.x*.008));
+    const angle=isBoring()?0:Math.max(-4,Math.min(4,vel.x*.008));
     button.style.transform=`translate3d(${pos.x.toFixed(2)}px,${pos.y.toFixed(2)}px,0) rotate(${angle.toFixed(2)}deg)`;
   };
 
+  const resetJoke=()=>{
+    if(raf){cancelAnimationFrame(raf);raf=0;}
+    pos={x:0,y:0};
+    vel={x:0,y:0};
+    pointer={x:null,y:null};
+    commentIndex=0;
+    response.textContent='';
+    response.classList.remove('is-visible');
+    updateBounds();
+    render();
+  };
+
   const emergencyBurst=(clientX,clientY)=>{
+    if(isBoring())return;
     updateBounds();
     const rect=stage.getBoundingClientRect();
     const px=clientX-rect.left;
@@ -100,7 +167,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   };
 
   const ensureLoop=()=>{
-    if(!raf&&visible&&!reduced&&finePointer){
+    if(!raf&&visible&&!reduced&&finePointer&&!isBoring()){
       lastFrame=performance.now();
       raf=requestAnimationFrame(frame);
     }
@@ -108,7 +175,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   const frame=now=>{
     raf=0;
-    if(!visible||reduced||!finePointer)return;
+    if(!visible||reduced||!finePointer||isBoring())return;
 
     const dt=Math.min(.032,Math.max(.001,(now-lastFrame)/1000));
     lastFrame=now;
@@ -207,7 +274,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     },{passive:true});
 
     button.addEventListener('pointerdown',e=>{
-      if(e.pointerType!=='mouse'&&e.pointerType!=='pen')return;
+      if(e.pointerType!=='mouse'&&e.pointerType!=='pen'||isBoring())return;
       e.preventDefault();
       emergencyBurst(e.clientX,e.clientY);
       ensureLoop();
@@ -216,6 +283,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   button.addEventListener('click',e=>{
     e.preventDefault();
+    if(isBoring())return;
     if(finePointer&&!reduced&&e.detail>0){
       const rect=button.getBoundingClientRect();
       emergencyBurst(rect.left+rect.width/2,rect.top+rect.height/2);
@@ -223,5 +291,10 @@ document.addEventListener('DOMContentLoaded',()=>{
       return;
     }
     nextComment();
+  });
+
+  window.addEventListener('portfolio:boringchange',event=>{
+    resetJoke();
+    if(!event.detail?.boring)ensureLoop();
   });
 });
