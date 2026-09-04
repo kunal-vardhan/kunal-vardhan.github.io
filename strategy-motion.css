@@ -32,29 +32,45 @@
 }
 html.boring-mode .strategy-motion-shell .strategy-node,html.boring-mode .strategy-motion-lines path,html.boring-mode .strategy-plan-output{transition:none!important}
 
-/* Strategy page: buyer stage changes the right asset */
-.strategy-asset-motion{position:relative}
-.strategy-asset-motion .funnel>div{position:relative;transition:border-color .2s ease,background-color .2s ease,transform .2s ease,opacity .2s ease;cursor:default}
-.strategy-asset-motion .funnel>div.is-active{border-color:var(--ink);background:#edf1ed;transform:translateX(4px)}
-.strategy-asset-motion .funnel>div:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
-.strategy-asset-motion .cluster .node,.strategy-asset-motion .cluster .hub{transition:border-color .22s ease,background-color .22s ease,transform .22s ease,opacity .22s ease}
-.strategy-asset-motion .cluster .node{opacity:1}
-.strategy-asset-motion.has-stage .cluster .node{opacity:.36}
-.strategy-asset-motion .cluster .node.is-match{opacity:1;border-color:var(--sage);background:#edf1ed}
-.strategy-asset-motion .cluster .node.is-match.n5{transform:translateX(-50%) translateY(-3px)}
-.strategy-asset-motion .cluster .node.is-match:not(.n5){transform:translateY(-3px)}
-.strategy-asset-motion .cluster .hub.is-pulsing{border-color:var(--ink);background:#dfe7e0}
-.strategy-asset-note{grid-column:1/-1;display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:baseline;margin-top:0;padding:11px 13px;border-top:1px solid var(--line);color:var(--slate);font-size:.67rem;line-height:1.5}
+/* Strategy page: one topic morphs with buyer intent */
+.strategy-asset-morph{position:relative;isolation:isolate}
+.strategy-asset-morph>.panel{position:relative;z-index:2}
+.strategy-asset-morph .funnel>div{position:relative;transition:border-color .2s ease,background-color .2s ease,transform .2s ease,opacity .2s ease;cursor:default}
+.strategy-asset-morph .funnel>div.is-active{border-color:var(--ink);background:#e5ebe6;transform:translateX(5px)}
+.strategy-asset-morph .funnel>div:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.strategy-asset-morph .cluster .node,.strategy-asset-morph .cluster .hub{transition:border-color .22s ease,background-color .22s ease,transform .22s ease,opacity .22s ease}
+.strategy-asset-morph .cluster .hub{line-height:1.25}
+.strategy-asset-morph .cluster .hub span{display:block;color:var(--sage);font:700 .5rem/1.2 Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+.strategy-asset-morph .cluster .hub strong{display:block;margin-top:4px;font-family:"Playfair Display",Georgia,"Times New Roman",serif;font-size:.82rem;font-weight:500;color:var(--ink)}
+.strategy-asset-morph .cluster .node{opacity:1}
+.strategy-asset-morph.has-stage .cluster .node{opacity:.3}
+.strategy-asset-morph .cluster .node.is-primary{opacity:1;border-color:var(--ink);background:#e5ebe6}
+.strategy-asset-morph .cluster .node.is-secondary{opacity:.78;border-color:var(--sage);background:#edf1ed}
+.strategy-asset-morph .cluster .node.is-primary.n5,.strategy-asset-morph .cluster .node.is-secondary.n5{transform:translateX(-50%) translateY(-4px)}
+.strategy-asset-morph .cluster .node.is-primary:not(.n5),.strategy-asset-morph .cluster .node.is-secondary:not(.n5){transform:translateY(-4px)}
+.strategy-asset-morph .cluster .hub.is-active{border-color:var(--ink);background:#dfe7e0;transform:translate(-50%,-50%) scale(1.035)}
+.strategy-asset-output{margin-top:12px;padding:13px 0 0;border-top:1px solid var(--ink);min-height:126px}
+.strategy-asset-kicker{display:block;color:var(--sage);font-size:.54rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase}
+.strategy-asset-title{display:block;margin-top:5px;font-family:"Playfair Display",Georgia,"Times New Roman",serif;font-size:1rem;font-weight:500;line-height:1.28;color:var(--ink)}
+.strategy-asset-meta{display:block;margin-top:6px;color:var(--ink);font-size:.64rem;font-weight:700}
+.strategy-asset-why{margin:5px 0 0;max-width:420px;color:var(--slate);font-size:.65rem;line-height:1.5}
+.strategy-asset-note{position:relative;z-index:2;grid-column:1/-1;display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:baseline;padding:11px 13px;border-top:1px solid var(--line);color:var(--slate);font-size:.67rem;line-height:1.5}
 .strategy-asset-note strong{color:var(--sage);font-size:.58rem;letter-spacing:.09em;text-transform:uppercase}
 .strategy-asset-note span{color:var(--slate)}
-.strategy-asset-note em{font-style:normal;color:var(--ink);font-weight:600}
+.strategy-asset-bridge{position:absolute;inset:0;z-index:1;overflow:visible;pointer-events:none}
+.strategy-asset-bridge path{fill:none;stroke:var(--sage);stroke-width:1.35;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;opacity:0;transition:stroke-dashoffset .42s ease,opacity .2s ease}
+.strategy-asset-bridge path.is-drawn{stroke-dashoffset:0;opacity:.58}
+.strategy-bridge-label{position:absolute;z-index:3;padding:2px 6px;border:1px solid var(--line);background:var(--surface);color:var(--sage);font-size:.5rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap;opacity:0;transform:translate(-50%,-50%) scale(.92);transition:opacity .2s ease,transform .2s ease;pointer-events:none}
+.strategy-bridge-label.is-visible{opacity:1;transform:translate(-50%,-50%) scale(1)}
 @media(max-width:700px){
+  .strategy-asset-bridge,.strategy-bridge-label{display:none}
   .strategy-asset-note{grid-template-columns:1fr;gap:3px}
-  .strategy-asset-motion .funnel>div.is-active{transform:none}
-  .strategy-asset-motion .cluster .node.is-match.n5{transform:translateX(-50%)}
-  .strategy-asset-motion .cluster .node.is-match:not(.n5){transform:none}
+  .strategy-asset-morph .funnel>div.is-active{transform:none}
+  .strategy-asset-morph .cluster .node.is-primary.n5,.strategy-asset-morph .cluster .node.is-secondary.n5{transform:translateX(-50%)}
+  .strategy-asset-morph .cluster .node.is-primary:not(.n5),.strategy-asset-morph .cluster .node.is-secondary:not(.n5){transform:none}
+  .strategy-asset-morph .cluster .hub.is-active{transform:translate(-50%,-50%)}
 }
 @media(prefers-reduced-motion:reduce){
-  .strategy-asset-motion .funnel>div,.strategy-asset-motion .cluster .node,.strategy-asset-motion .cluster .hub{transition:none!important}
+  .strategy-asset-morph .funnel>div,.strategy-asset-morph .cluster .node,.strategy-asset-morph .cluster .hub,.strategy-asset-bridge path,.strategy-bridge-label{transition:none!important}
 }
-html.boring-mode .strategy-asset-motion .funnel>div,html.boring-mode .strategy-asset-motion .cluster .node,html.boring-mode .strategy-asset-motion .cluster .hub{transition:none!important}
+html.boring-mode .strategy-asset-morph .funnel>div,html.boring-mode .strategy-asset-morph .cluster .node,html.boring-mode .strategy-asset-morph .cluster .hub,html.boring-mode .strategy-asset-bridge path,html.boring-mode .strategy-bridge-label{transition:none!important}
