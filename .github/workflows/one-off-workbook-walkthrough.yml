@@ -1,0 +1,56 @@
+name: One-off workbook walkthrough patch
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/one-off-workbook-walkthrough.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify main is unchanged
+        run: |
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+      - name: Wire workbook walkthrough assets
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          wb = Path('strategy-workbook.html')
+          text = wb.read_text()
+          head_old = '</style>\n</head>'
+          head_new = '</style>\n<link rel="stylesheet" href="/strategy-workbook-motion.css?v=1">\n</head>'
+          if head_old not in text:
+              raise SystemExit('Workbook head marker not found')
+          text = text.replace(head_old, head_new, 1)
+
+          body_old = '</script>\n</body>'
+          body_new = '</script>\n<script src="/strategy-workbook-motion.js?v=1" defer></script>\n</body>'
+          if body_old not in text:
+              raise SystemExit('Workbook body marker not found')
+          text = text.replace(body_old, body_new, 1)
+          wb.write_text(text)
+
+          strategy = Path('strategy.html')
+          s = strategy.read_text()
+          old = '<iframe class="workbook-frame" src="/strategy-workbook.html"'
+          new = '<iframe class="workbook-frame" src="/strategy-workbook.html?v=2"'
+          if old not in s:
+              raise SystemExit('Strategy iframe marker not found')
+          strategy.write_text(s.replace(old, new, 1))
+          PY
+      - name: Commit and push
+        run: |
+          git config user.name "Kunal Vardhan"
+          git config user.email "kunalwritescopy@gmail.com"
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          git add strategy-workbook.html strategy.html
+          git commit -m "Wire guided workbook walkthrough"
+          git push origin HEAD:main
