@@ -64,3 +64,86 @@ document.addEventListener('DOMContentLoaded',()=>{
   };
   requestAnimationFrame(frame);
 });
+/* homepage workflow with opinions */
+document.addEventListener('DOMContentLoaded',()=>{
+  const map=document.querySelector('.story-hero ~ .brand-strip ~ .section + .section-soft .mini-map')||document.querySelector('.teaser-split .mini-map');
+  const svg=map?.querySelector('svg');
+  if(!map||!svg||map.dataset.workflowReady==='true')return;
+  map.dataset.workflowReady='true';
+
+  const rects=[...svg.querySelectorAll('g:first-of-type rect')];
+  const texts=[...svg.querySelectorAll('g:first-of-type text')];
+  if(rects.length<6||texts.length<6)return;
+
+  const messages=[
+    'First question: what are we actually selling?',
+    'Someone has to read this. Ideally the right someone.',
+    'Now we find what everyone else missed.',
+    'Still not writing yet. I know.',
+    'Nice try. Research first.',
+    'Published? Cool. We’re not done.'
+  ];
+
+  const finePointer=window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+  const note=document.createElement('p');
+  note.className='workflow-whisper';
+  note.setAttribute('aria-live','polite');
+  note.textContent=finePointer?'Hover a step. It has opinions.':'Tap a step. It has opinions.';
+  map.appendChild(note);
+
+  const style=document.createElement('style');
+  style.textContent=`
+    .mini-map .workflow-whisper{min-height:1.5em;margin:4px 0 0;color:var(--sage);font-size:.65rem;font-weight:600;letter-spacing:.01em;transition:opacity .16s ease,transform .16s ease}
+    .mini-map .workflow-whisper.is-speaking{color:var(--ink);transform:translateX(3px)}
+    .mini-map svg .workflow-node-hit{transform-box:fill-box;transform-origin:center;transition:transform .2s cubic-bezier(.2,.8,.2,1),fill .2s ease,stroke .2s ease}
+    .mini-map svg rect.workflow-node-hit{cursor:help}
+    .mini-map svg text.workflow-node-hit{pointer-events:auto;cursor:help}
+    .mini-map svg rect.workflow-node-hit.is-active{fill:#e6ece7!important;stroke:#687b70!important;transform:translateY(-3px)}
+    .mini-map svg text.workflow-node-hit.is-active{transform:translateY(-3px)}
+    .mini-map svg rect.workflow-node-hit.is-nope{transform:translate(-7px,-2px) rotate(-1deg)}
+    .mini-map svg text.workflow-node-hit.is-nope{transform:translate(-7px,-2px) rotate(-1deg)}
+    @media(prefers-reduced-motion:reduce){.mini-map svg .workflow-node-hit,.mini-map .workflow-whisper{transition:none!important;transform:none!important}}
+  `;
+  document.head.appendChild(style);
+
+  let resetTimer=0;
+  let touchTimer=0;
+  const hint=note.textContent;
+
+  const clear=()=>{
+    rects.forEach(el=>el.classList.remove('is-active','is-nope'));
+    texts.forEach(el=>el.classList.remove('is-active','is-nope'));
+    note.classList.remove('is-speaking');
+    note.textContent=hint;
+  };
+
+  const activate=index=>{
+    window.clearTimeout(resetTimer);
+    window.clearTimeout(touchTimer);
+    rects.forEach((el,i)=>{
+      el.classList.toggle('is-active',i===index);
+      el.classList.toggle('is-nope',i===index&&index===4);
+    });
+    texts.forEach((el,i)=>{
+      el.classList.toggle('is-active',i===index);
+      el.classList.toggle('is-nope',i===index&&index===4);
+    });
+    note.textContent=messages[index];
+    note.classList.add('is-speaking');
+  };
+
+  rects.forEach((rect,index)=>{
+    const text=texts[index];
+    rect.classList.add('workflow-node-hit');
+    text.classList.add('workflow-node-hit');
+    [rect,text].forEach(el=>{
+      el.addEventListener('pointerenter',()=>{if(finePointer)activate(index);});
+      el.addEventListener('pointerleave',()=>{if(finePointer)resetTimer=window.setTimeout(clear,90);});
+      el.addEventListener('pointerdown',()=>{
+        if(finePointer)return;
+        activate(index);
+        touchTimer=window.setTimeout(clear,1900);
+      },{passive:true});
+    });
+  });
+});
