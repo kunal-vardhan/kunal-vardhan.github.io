@@ -160,3 +160,122 @@ document.addEventListener('DOMContentLoaded',()=>{
     });
   });
 });
+
+/* work library self-scrolling previews */
+document.addEventListener('DOMContentLoaded',()=>{
+  if(location.pathname!=='/work.html'&&location.pathname!=='/work')return;
+  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const finePointer=window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+  const frames=[...document.querySelectorAll('.visual-work-card .page-scroll-frame.page-scroll-tiles')];
+  if(!frames.length)return;
+
+  frames.forEach(frame=>{if(!frame.hasAttribute('tabindex'))frame.tabIndex=0;});
+  if(reduced||!finePointer)return;
+
+  const style=document.createElement('style');
+  style.textContent=`
+    .work-preview-shell{position:relative}
+    .work-preview-hint{position:absolute;right:8px;bottom:8px;z-index:4;padding:4px 6px;border:1px solid rgba(28,28,28,.18);background:rgba(242,239,233,.94);color:var(--ink);font-size:.52rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;pointer-events:none;transition:opacity .16s ease,transform .16s ease}
+    .work-preview-shell.is-touring .work-preview-hint,.work-preview-shell.is-manual .work-preview-hint{opacity:0;transform:translateY(4px)}
+    .page-scroll-frame.is-auto-touring{scrollbar-color:var(--sage) var(--surface)}
+    @media(prefers-reduced-motion:reduce){.work-preview-hint{display:none!important}}
+  `;
+  document.head.appendChild(style);
+
+  const states=new WeakMap();
+  const easeOut=t=>1-Math.pow(1-t,3);
+
+  const cancel=frame=>{
+    const state=states.get(frame);
+    if(state?.raf){cancelAnimationFrame(state.raf);state.raf=0;}
+  };
+
+  const eagerLoad=frame=>{
+    frame.querySelectorAll('img[loading="lazy"]').forEach(img=>{img.loading='eager';});
+  };
+
+  const returnTop=frame=>{
+    const state=states.get(frame);
+    cancel(frame);
+    if(!state||frame.scrollTop<=0){frame.scrollTop=0;return;}
+    const start=frame.scrollTop;
+    const duration=Math.max(520,Math.min(1250,420+start*.12));
+    const begun=performance.now();
+    const tick=now=>{
+      const live=states.get(frame);
+      if(!live||live.hovering)return;
+      const t=Math.min(1,(now-begun)/duration);
+      frame.scrollTop=Math.round(start*(1-easeOut(t)));
+      if(t<1){live.raf=requestAnimationFrame(tick);}else{live.raf=0;frame.scrollTop=0;}
+    };
+    state.raf=requestAnimationFrame(tick);
+  };
+
+  const startTour=frame=>{
+    const state=states.get(frame);
+    if(!state||state.manual)return;
+    cancel(frame);
+    eagerLoad(frame);
+    frame.classList.add('is-auto-touring');
+    state.shell.classList.add('is-touring');
+    let last=performance.now();
+    const tick=now=>{
+      const live=states.get(frame);
+      if(!live||!live.hovering||live.manual){frame.classList.remove('is-auto-touring');return;}
+      const dt=Math.min(.04,Math.max(.001,(now-last)/1000));
+      last=now;
+      const target=Math.max(0,frame.scrollHeight-frame.clientHeight);
+      const distance=Math.max(0,target-frame.scrollTop);
+      if(distance<=1){live.raf=0;frame.scrollTop=target;frame.classList.remove('is-auto-touring');return;}
+      const total=Math.max(1,target);
+      const speed=Math.max(420,Math.min(980,total/8.2));
+      frame.scrollTop=Math.min(target,frame.scrollTop+speed*dt);
+      live.raf=requestAnimationFrame(tick);
+    };
+    state.raf=requestAnimationFrame(tick);
+  };
+
+  frames.forEach(frame=>{
+    if(frame.dataset.autoPreviewReady==='true')return;
+    frame.dataset.autoPreviewReady='true';
+    const shell=document.createElement('div');
+    shell.className='work-preview-shell';
+    frame.parentNode.insertBefore(shell,frame);
+    shell.appendChild(frame);
+    const hint=document.createElement('span');
+    hint.className='work-preview-hint';
+    hint.setAttribute('aria-hidden','true');
+    hint.textContent='hover to preview ↓';
+    shell.appendChild(hint);
+
+    const state={raf:0,hovering:false,manual:false,shell};
+    states.set(frame,state);
+
+    const takeManual=()=>{
+      if(!state.hovering)return;
+      state.manual=true;
+      cancel(frame);
+      frame.classList.remove('is-auto-touring');
+      shell.classList.remove('is-touring');
+      shell.classList.add('is-manual');
+    };
+
+    frame.addEventListener('pointerenter',()=>{
+      state.hovering=true;
+      state.manual=false;
+      shell.classList.remove('is-manual');
+      startTour(frame);
+    });
+    frame.addEventListener('pointerleave',()=>{
+      state.hovering=false;
+      state.manual=false;
+      cancel(frame);
+      frame.classList.remove('is-auto-touring');
+      shell.classList.remove('is-touring','is-manual');
+      returnTop(frame);
+    });
+    frame.addEventListener('wheel',takeManual,{passive:true});
+    frame.addEventListener('pointerdown',takeManual,{passive:true});
+    frame.addEventListener('keydown',takeManual);
+  });
+});
