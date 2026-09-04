@@ -1,0 +1,18 @@
+/* Case studies hub: recruiter scan motion */
+.case-hub-card.case-scan-motion{position:relative;isolation:isolate;transition:background-color .22s ease,transform .22s ease}
+.case-hub-card.case-scan-motion::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--sage);transform:scaleX(0);transform-origin:left center;opacity:.75;transition:transform .55s ease}
+.case-hub-card.case-scan-motion.is-scan-complete::after{transform:scaleX(1)}
+.case-hub-card.case-scan-motion .case-thumb,.case-hub-card.case-scan-motion .case-scan p,.case-hub-card.case-scan-motion .case-outcome{transition:opacity .22s ease,transform .22s ease,background-color .22s ease,border-color .22s ease}
+.case-hub-card.case-scan-motion .case-scan p{position:relative;padding:4px 6px 4px 0;border-left:2px solid transparent}
+.case-hub-card.case-scan-motion .case-scan p::before{content:"";position:absolute;left:-7px;top:50%;width:5px;height:5px;border-radius:50%;background:var(--sage);opacity:0;transform:translateY(-50%) scale(.55);transition:opacity .18s ease,transform .18s ease}
+.case-hub-card.case-scan-motion .case-outcome{position:relative;padding:8px 10px;border:1px solid transparent}
+.case-hub-card.case-scan-motion.is-step-role .case-scan p:first-child,.case-hub-card.case-scan-motion.is-step-proof .case-scan p:nth-child(2){border-left-color:var(--sage);background:rgba(104,123,112,.07);padding-left:8px;transform:translateX(2px)}
+.case-hub-card.case-scan-motion.is-step-role .case-scan p:first-child::before,.case-hub-card.case-scan-motion.is-step-proof .case-scan p:nth-child(2)::before{opacity:1;transform:translateY(-50%) scale(1)}
+.case-hub-card.case-scan-motion.is-step-result .case-outcome{border-color:var(--sage);background:#edf1ed;transform:translateX(-2px)}
+.case-hub-card.case-scan-motion.has-focused-step .case-scan p,.case-hub-card.case-scan-motion.has-focused-step .case-outcome{opacity:.34}
+.case-hub-card.case-scan-motion.has-focused-step.is-step-role .case-scan p:first-child,.case-hub-card.case-scan-motion.has-focused-step.is-step-proof .case-scan p:nth-child(2),.case-hub-card.case-scan-motion.has-focused-step.is-step-result .case-outcome{opacity:1}
+.case-hub-card.case-scan-motion:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
+@media(hover:hover) and (pointer:fine){.case-hub-card.case-scan-motion:hover{background:rgba(250,248,243,.6)}}
+@media(max-width:700px){.case-hub-card.case-scan-motion .case-outcome{padding:6px 0;border:0}.case-hub-card.case-scan-motion.is-step-result .case-outcome{background:transparent;transform:none}.case-hub-card.case-scan-motion::after{display:none}}
+@media(prefers-reduced-motion:reduce){.case-hub-card.case-scan-motion,.case-hub-card.case-scan-motion::after,.case-hub-card.case-scan-motion .case-thumb,.case-hub-card.case-scan-motion .case-scan p,.case-hub-card.case-scan-motion .case-outcome,.case-hub-card.case-scan-motion .case-scan p::before{transition:none!important}.case-hub-card.case-scan-motion::after{transform:scaleX(1)}}
+html.boring-mode .case-hub-card.case-scan-motion,html.boring-mode .case-hub-card.case-scan-motion::after,html.boring-mode .case-hub-card.case-scan-motion .case-scan p,html.boring-mode .case-hub-card.case-scan-motion .case-outcome{transition:none!important}
