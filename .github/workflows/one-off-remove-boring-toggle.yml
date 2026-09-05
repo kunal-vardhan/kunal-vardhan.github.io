@@ -1,0 +1,61 @@
+name: One-off remove boring toggle
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/one-off-remove-boring-toggle.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify main is unchanged
+        run: |
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+      - name: Remove homepage boring toggle
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('viral-joke.js')
+          s=p.read_text()
+          old="""const portfolioBoringKey='kv-portfolio-boring';
+try{
+  if(localStorage.getItem(portfolioBoringKey)==='1')document.documentElement.classList.add('boring-mode');
+}catch{}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const isBoring=()=>document.documentElement.classList.contains('boring-mode');
+"""
+          new="""document.addEventListener('DOMContentLoaded',()=>{
+  const isBoring=()=>false;
+"""
+          if old not in s:
+              raise SystemExit('boring-mode preamble marker missing')
+          s=s.replace(old,new,1)
+          start=s.find("  const toggleStyle=document.createElement('style');")
+          end=s.find("  const copy=document.querySelector('.teaser-split > div:first-child');")
+          if start<0 or end<0 or end<=start:
+              raise SystemExit('boring toggle block markers missing')
+          s=s[:start]+s[end:]
+          p.write_text(s)
+          PY
+      - name: Verify joke remains and toggle is gone
+        run: |
+          grep -q "Make it go viral" viral-joke.js
+          ! grep -q "boring-bar" viral-joke.js
+          ! grep -q "Make this website boring" viral-joke.js
+          grep -q "viral-joke-button" viral-joke.js
+      - name: Commit and push
+        run: |
+          git config user.name "Kunal Vardhan"
+          git config user.email "kunalwritescopy@gmail.com"
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          git add viral-joke.js
+          git commit -m "Remove homepage boring toggle"
+          git push origin HEAD:main
