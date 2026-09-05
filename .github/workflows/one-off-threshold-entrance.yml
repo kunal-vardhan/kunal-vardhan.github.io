@@ -1,0 +1,57 @@
+name: One-off threshold entrance patch
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/one-off-threshold-entrance.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify main is unchanged
+        run: |
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+      - name: Wire homepage threshold entrance
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('index.html')
+          s = p.read_text()
+
+          replacements = [
+              ('<link rel="stylesheet" href="/magic-foundation.css?v=1">', '<link rel="stylesheet" href="/magic-foundation.css?v=1"><link rel="stylesheet" href="/threshold-entrance.css?v=1">'),
+              ('<main id="main"><section class="story-hero">', '<main id="main"><div class="threshold-shell" data-threshold><div class="threshold-sticky"><section class="story-hero">'),
+              ('<p class="hero-whisper">No spell for this bit. Mostly research.</p>', '<p class="hero-whisper">Accio traffic would\'ve been easier. Sadly, mostly research.</p>'),
+              ('<script src="/magic-foundation.js?v=1" defer></script><script src="/proof-metrics.js?v=2" defer></script>', '<script src="/magic-foundation.js?v=1" defer></script><script src="/threshold-entrance.js?v=1" defer></script><script src="/proof-metrics.js?v=3" defer></script>')
+          ]
+
+          for old, new in replacements:
+              if old not in s:
+                  raise SystemExit(f'Marker not found: {old[:100]}')
+              s = s.replace(old, new, 1)
+
+          end_marker = '</div></div></section><section class="brand-strip">'
+          if end_marker not in s:
+              raise SystemExit('Hero end marker not found')
+
+          threshold_layers = '''</div></div></section><div class="threshold-wing threshold-wing-left" aria-hidden="true"></div><div class="threshold-wing threshold-wing-right" aria-hidden="true"></div><div class="threshold-light" aria-hidden="true"></div><div class="threshold-arch" aria-hidden="true"></div><div class="threshold-arrival"><p class="threshold-name">Kunal Vardhan</p><p class="threshold-role">Writer · content marketer · content strategist</p><p class="threshold-hp">Hogwarts has ruined normal entrances for me.</p><span class="threshold-enter-copy">Scroll to enter</span></div><p class="threshold-spell" aria-hidden="true">Lumos.</p></div></div><section class="brand-strip">'''
+          s = s.replace(end_marker, threshold_layers, 1)
+
+          p.write_text(s)
+          PY
+      - name: Commit and push
+        run: |
+          git config user.name "Kunal Vardhan"
+          git config user.email "kunalwritescopy@gmail.com"
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          git add index.html
+          git commit -m "Turn homepage opening into a scroll-driven threshold"
+          git push origin HEAD:main
