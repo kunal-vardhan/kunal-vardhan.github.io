@@ -1,7 +1,13 @@
 @import url('/revamp.css?v=1');
 
 /* The Work Library keeps its existing preview DOM and scrolling engines, but the shell is rebuilt at runtime. */
-body.page-work{background:var(--paper-2);color:var(--ink)}
+body.page-work{background:var(--paper-2)!important;color:var(--ink)!important}
+body.page-work.world-v2 .site-header{background:var(--oxblood-2)!important;border-bottom:1px solid rgba(212,186,128,.62)!important;box-shadow:0 8px 24px rgba(42,18,21,.16)!important}
+body.page-work.world-v2 .brand-lockup img{filter:brightness(0) invert(1) sepia(.25) saturate(.7) brightness(1.06)!important}
+body.page-work.world-v2 .site-nav a{color:#eadbbd!important}
+body.page-work.world-v2 .page-hero{background:radial-gradient(circle at 82% 18%,rgba(178,138,73,.18),transparent 21rem),linear-gradient(118deg,var(--forest-2),#24362d 58%,#1b2822)!important;color:#f3e6cc!important;border-bottom:1px solid rgba(178,138,73,.45)!important}
+body.page-work.world-v2 .page-hero h1{font-family:var(--serif)!important;color:#f6ead1!important}
+body.page-work.world-v2 .page-hero p{color:rgba(240,228,204,.83)!important}
 body.page-work .section{position:relative}
 body.page-work .section:nth-of-type(even){background:rgba(218,197,158,.22)}
 body.page-work .section-head{padding-bottom:16px;border-bottom:3px double rgba(62,43,29,.24)}
