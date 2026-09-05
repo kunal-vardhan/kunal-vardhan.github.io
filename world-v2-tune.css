@@ -1,0 +1,153 @@
+/* World v2 tuning pass: brand typography, restrained scale, bounded footer, clearer Potter cues. */
+
+body.world-v2,
+body.world-v2 button,
+body.world-v2 input,
+body.world-v2 textarea,
+body.world-v2 select{
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+
+body.world-v2 h1,
+body.world-v2 h2,
+body.world-v2 h3,
+body.world-v2 h4,
+body.world-v2 .hero-whisper,
+body.world-v2 .world-strategy-center,
+body.world-v2 .world-dash-gag,
+body.world-v2 .world-spell-status,
+body.world-v2 .world-hp-note,
+body.world-v2 .world-footer-note{
+  font-family:"Playfair Display",Georgia,"Times New Roman",serif;
+}
+
+/* Keep the redesign expressive without abandoning the restrained brand scale. */
+body.page-home .hero-copy h1{
+  font-size:clamp(2.65rem,5.15vw,5rem)!important;
+  line-height:1!important;
+  letter-spacing:-.035em!important;
+  max-width:780px;
+}
+body.page-home .section-head h2{
+  font-size:clamp(1.85rem,3.25vw,3.15rem)!important;
+  line-height:1.08!important;
+  letter-spacing:-.025em!important;
+}
+body.world-v2:not(.page-home) .page-hero h1,
+body.world-v2 .case-page-hero h1{
+  font-size:clamp(2.45rem,4.9vw,4.55rem)!important;
+  line-height:1.01!important;
+  letter-spacing:-.03em!important;
+  max-width:920px!important;
+}
+body.page-case .case-prose h2{
+  font-size:clamp(1.75rem,3.2vw,2.85rem)!important;
+  line-height:1.08!important;
+  letter-spacing:-.022em!important;
+}
+body.page-case .case-prose>section::before{
+  font-size:clamp(2.5rem,5vw,4.8rem)!important;
+}
+body.page-home .section{
+  padding-top:clamp(62px,7vw,94px)!important;
+  padding-bottom:clamp(62px,7vw,94px)!important;
+}
+body.world-v2:not(.page-home) .page-hero,
+body.world-v2 .case-page-hero{
+  padding:clamp(64px,7vw,96px) 0 clamp(56px,6vw,82px)!important;
+}
+body.page-home .threshold-shell .story-hero{
+  min-height:min(820px,calc(100svh - 64px))!important;
+  padding:clamp(66px,7vw,98px) 0 clamp(62px,7vw,92px)!important;
+}
+
+/* Decorative route must never create extra document height. */
+body.world-v2 main{overflow:clip}
+body.world-v2 .world-route{
+  top:0!important;
+  bottom:0!important;
+  height:auto!important;
+  max-height:100%!important;
+  overflow:hidden!important;
+}
+
+/* Footer is deliberately small and finite on every page. */
+body.world-v2 .site-footer{
+  position:relative;
+  min-height:0!important;
+  height:auto!important;
+  padding:0!important;
+  margin:0!important;
+  overflow:hidden!important;
+  background:#211713!important;
+}
+body.world-v2 .site-footer::before,
+body.world-v2 .site-footer::after{display:none!important}
+body.world-v2 .footer-wrap{
+  min-height:68px!important;
+  padding:18px 0!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:18px!important;
+  flex-wrap:wrap!important;
+}
+body.world-v2 .footer-wrap p,
+body.world-v2 .footer-wrap a{
+  margin:0!important;
+  font-size:.72rem!important;
+  line-height:1.4!important;
+}
+
+/* Potter references are part of the messaging, not a theme-park overlay. */
+.world-hp-note{
+  display:inline-block;
+  max-width:620px;
+  margin:18px 0 0;
+  padding:8px 11px 7px;
+  border-left:2px solid rgba(168,135,85,.65);
+  color:#6f5a43;
+  font-size:.78rem;
+  line-height:1.55;
+  font-style:italic;
+  background:rgba(200,169,126,.09);
+  transform:rotate(-.25deg);
+}
+body.world-v2:not(.page-home) .page-hero .world-hp-note,
+body.world-v2 .case-page-hero .world-hp-note{
+  color:rgba(244,235,220,.78)!important;
+  border-left-color:rgba(210,189,145,.58);
+  background:rgba(255,255,255,.035);
+}
+body.page-home .brand-strip::after{
+  content:"Hogwarts got moving portraits. I got moving wordmarks.";
+  position:absolute;
+  right:28px;
+  bottom:8px;
+  width:auto;
+  height:auto;
+  z-index:6;
+  background:none!important;
+  color:rgba(238,228,210,.46);
+  font-family:"Playfair Display",Georgia,serif;
+  font-size:.64rem;
+  font-style:italic;
+  pointer-events:none;
+}
+.world-footer-note{
+  color:rgba(224,197,142,.68);
+  font-size:.68rem;
+  font-style:italic;
+  white-space:nowrap;
+}
+
+@media(max-width:760px){
+  body.page-home .hero-copy h1{font-size:clamp(2.45rem,11.5vw,3.75rem)!important}
+  body.page-home .section-head h2{font-size:clamp(1.75rem,8vw,2.55rem)!important}
+  body.world-v2:not(.page-home) .page-hero h1,
+  body.world-v2 .case-page-hero h1{font-size:clamp(2.25rem,10.5vw,3.65rem)!important}
+  body.page-case .case-prose h2{font-size:clamp(1.65rem,8vw,2.35rem)!important}
+  body.page-home .brand-strip::after{display:none}
+  body.world-v2 .footer-wrap{justify-content:flex-start!important;min-height:0!important}
+  .world-footer-note{width:100%;white-space:normal}
+}
