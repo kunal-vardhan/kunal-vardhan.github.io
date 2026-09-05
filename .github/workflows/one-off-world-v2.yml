@@ -52,7 +52,6 @@ jobs:
                   s = s.replace('<body>', f'<body class="{body_class}">', 1)
               p.write_text(s)
 
-          # Homepage: retire the literal doorway while keeping all portfolio content and proof.
           p = Path('index.html')
           s = p.read_text()
           for old in [
@@ -76,7 +75,6 @@ jobs:
               s = s.replace(old, new, 1)
           p.write_text(s)
 
-          # Strategy positioning stays clear, but sounds like Kunal.
           p = Path('strategy.html')
           s = p.read_text()
           old = 'I do not want a content calendar until I know why the content should exist.'
@@ -84,7 +82,6 @@ jobs:
           s = s.replace(old, "Please don't give me a content calendar yet.", 1)
           p.write_text(s)
 
-          # Work library keeps every sample and every scrolling preview. Only the framing changes.
           p = Path('work.html')
           s = p.read_text()
           old = 'Writing, website copy, commercial pages, and the work around them.'
@@ -92,7 +89,6 @@ jobs:
           s = s.replace(old, 'Articles, websites, commercial pages, eBooks, and the stuff around them.', 1)
           p.write_text(s)
 
-          # About: remove the rejected isolated Lumos demo, keep the facts, and turn them into the common-room layer.
           p = Path('about.html')
           s = p.read_text()
           s = s.replace('<link rel="stylesheet" href="/about-magic.css?v=1">', '')
@@ -108,7 +104,6 @@ jobs:
               s = s.replace(old, new, 1)
           p.write_text(s)
 
-          # Case hub becomes the archive entrance. Individual case-study substance is untouched.
           p = Path('case-studies/index.html')
           s = p.read_text()
           old = 'The work makes more sense with the context around it.'
@@ -116,12 +111,12 @@ jobs:
           s = s.replace(old, 'Four projects. I kept the receipts.', 1)
           p.write_text(s)
           PY
-      - name: Verify protected work mechanics are still referenced
+      - name: Verify protected work mechanics and proof are still referenced
         run: |
           grep -q 'work-preview-motion.css' work.html
           grep -q 'page-scroll-frame' work.html
           grep -q 'ebook-library.css' work.html
-          grep -q 'work-preview-motion.js' work.html
+          grep -q 'story.js?v=4' work.html
           grep -q 'ebook-preview-motion.js' work.html
           grep -q '29 → 3,842' case-studies/api-organic-growth.html
           grep -q '0 → ~2,500' case-studies/learniverse-growth.html
