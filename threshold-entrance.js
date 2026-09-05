@@ -6,14 +6,23 @@
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const boring = () => document.documentElement.classList.contains('boring-mode');
   const clamp = value => Math.max(0, Math.min(1, value));
-  const smooth = (from, to, value) => {
+  const smoother = (from, to, value) => {
     const t = clamp((value - from) / Math.max(.0001, to - from));
-    return t * t * (3 - 2 * t);
+    return t * t * t * (t * (t * 6 - 15) + 10);
   };
 
   let raf = 0;
   let proofReady = false;
   let lastWidth = window.innerWidth;
+  let targetProgress = 0;
+  let renderedProgress = 0;
+  let lastFrameTime = 0;
+
+  const getProgress = () => {
+    const rect = shell.getBoundingClientRect();
+    const range = Math.max(1, shell.offsetHeight - window.innerHeight);
+    return clamp(-rect.top / range);
+  };
 
   const setHeroAccessible = open => {
     if (!hero) return;
@@ -33,14 +42,46 @@
     window.dispatchEvent(new CustomEvent('portfolio:threshold-open'));
   };
 
+  const render = progress => {
+    const open = smoother(.08, .78, progress);
+    const arrival = 1 - smoother(.04, .32, progress);
+    const arch = 1 - smoother(.22, .80, progress);
+    const heroReveal = smoother(.23, .73, progress);
+    const spellIn = smoother(.19, .40, progress);
+    const spellOut = 1 - smoother(.55, .76, progress);
+    const spell = spellIn * spellOut;
+    const lightIn = smoother(.15, .49, progress);
+    const lightOut = 1 - .38 * smoother(.82, 1, progress);
+    const light = lightIn * lightOut;
+
+    const half = Math.max(360, lastWidth * .56 + 44);
+    const shift = open * half;
+    const scale = .978 + heroReveal * .022;
+
+    shell.style.setProperty('--gate-left', `${(-shift).toFixed(2)}px`);
+    shell.style.setProperty('--gate-right', `${shift.toFixed(2)}px`);
+    shell.style.setProperty('--arrival-opacity', arrival.toFixed(4));
+    shell.style.setProperty('--arch-opacity', arch.toFixed(4));
+    shell.style.setProperty('--hero-opacity', heroReveal.toFixed(4));
+    shell.style.setProperty('--hero-scale', scale.toFixed(5));
+    shell.style.setProperty('--spell-opacity', spell.toFixed(4));
+    shell.style.setProperty('--light-opacity', light.toFixed(4));
+
+    const entered = progress >= .58;
+    shell.classList.toggle('is-open', entered);
+    document.body.classList.toggle('threshold-entered', entered);
+    setHeroAccessible(progress >= .45);
+
+    if (progress >= .70) markProofReady();
+  };
+
   const finish = () => {
-    shell.style.setProperty('--gate-left', '-56vw');
-    shell.style.setProperty('--gate-right', '56vw');
-    shell.style.setProperty('--arrival-opacity', '0');
-    shell.style.setProperty('--arch-opacity', '0');
-    shell.style.setProperty('--hero-opacity', '1');
-    shell.style.setProperty('--hero-scale', '1');
-    shell.style.setProperty('--spell-opacity', '0');
+    targetProgress = 1;
+    renderedProgress = 1;
+    lastFrameTime = 0;
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+    render(1);
     shell.style.setProperty('--light-opacity', '.42');
     shell.classList.add('is-open');
     document.body.classList.add('threshold-entered');
@@ -48,77 +89,75 @@
     markProofReady();
   };
 
-  const update = () => {
-    raf = 0;
-
+  const tick = time => {
     if (reduceMotion.matches || boring()) {
       finish();
       return;
     }
 
-    const rect = shell.getBoundingClientRect();
-    const range = Math.max(1, shell.offsetHeight - window.innerHeight);
-    const progress = clamp(-rect.top / range);
+    const dt = Math.min(50, Math.max(8, lastFrameTime ? time - lastFrameTime : 16.67));
+    lastFrameTime = time;
 
-    const open = smooth(.12, .66, progress);
-    const arrival = 1 - smooth(.07, .27, progress);
-    const arch = 1 - smooth(.30, .70, progress);
-    const heroReveal = smooth(.31, .61, progress);
-    const spellIn = smooth(.24, .36, progress);
-    const spellOut = 1 - smooth(.53, .68, progress);
-    const spell = spellIn * spellOut;
-    const lightIn = smooth(.22, .45, progress);
-    const lightOut = 1 - .46 * smooth(.76, 1, progress);
-    const light = lightIn * lightOut;
+    const distance = targetProgress - renderedProgress;
+    const follow = 1 - Math.exp(-dt / 105);
+    renderedProgress += distance * follow;
 
-    const half = Math.max(360, lastWidth * .53 + 44);
-    const shift = open * half;
-    const scale = .982 + heroReveal * .018;
+    if (Math.abs(distance) < .00035) renderedProgress = targetProgress;
+    render(renderedProgress);
 
-    shell.style.setProperty('--gate-left', `${(-shift).toFixed(1)}px`);
-    shell.style.setProperty('--gate-right', `${shift.toFixed(1)}px`);
-    shell.style.setProperty('--arrival-opacity', arrival.toFixed(3));
-    shell.style.setProperty('--arch-opacity', arch.toFixed(3));
-    shell.style.setProperty('--hero-opacity', heroReveal.toFixed(3));
-    shell.style.setProperty('--hero-scale', scale.toFixed(4));
-    shell.style.setProperty('--spell-opacity', spell.toFixed(3));
-    shell.style.setProperty('--light-opacity', light.toFixed(3));
-
-    const entered = progress >= .56;
-    shell.classList.toggle('is-open', entered);
-    document.body.classList.toggle('threshold-entered', entered);
-    setHeroAccessible(progress >= .48);
-
-    if (progress >= .68) markProofReady();
+    if (renderedProgress !== targetProgress) {
+      raf = requestAnimationFrame(tick);
+    } else {
+      raf = 0;
+      lastFrameTime = 0;
+    }
   };
 
   const schedule = () => {
-    if (!raf) raf = requestAnimationFrame(update);
+    if (reduceMotion.matches || boring()) {
+      finish();
+      return;
+    }
+    targetProgress = getProgress();
+    if (!raf) raf = requestAnimationFrame(tick);
   };
 
   if (reduceMotion.matches || boring()) {
     finish();
   } else {
     setHeroAccessible(false);
-    update();
+    targetProgress = getProgress();
+    renderedProgress = targetProgress;
+    render(renderedProgress);
+
     window.addEventListener('scroll', schedule, { passive: true });
     window.addEventListener('resize', () => {
       lastWidth = window.innerWidth;
       schedule();
     }, { passive: true });
-    window.addEventListener('pageshow', schedule);
+    window.addEventListener('pageshow', () => {
+      targetProgress = getProgress();
+      renderedProgress = targetProgress;
+      render(renderedProgress);
+    });
   }
 
   reduceMotion.addEventListener?.('change', event => {
     if (event.matches) finish();
     else {
       proofReady = shell.classList.contains('is-proof-ready');
-      schedule();
+      targetProgress = getProgress();
+      renderedProgress = targetProgress;
+      render(renderedProgress);
     }
   });
 
   window.addEventListener('portfolio:boringchange', event => {
     if (event.detail?.boring || boring()) finish();
-    else schedule();
+    else {
+      targetProgress = getProgress();
+      renderedProgress = targetProgress;
+      render(renderedProgress);
+    }
   });
 })();
