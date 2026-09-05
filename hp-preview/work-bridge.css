@@ -1,0 +1,28 @@
+@import url('/hp-preview/revamp.css?v=1');
+
+/* The Work Library keeps its existing preview DOM and scrolling engines, but the shell is rebuilt at runtime. */
+body.page-work{background:var(--paper-2)!important;color:var(--ink)!important}
+body.page-work.world-v2 .site-header{background:var(--oxblood-2)!important;border-bottom:1px solid rgba(212,186,128,.62)!important;box-shadow:0 8px 24px rgba(42,18,21,.16)!important}
+body.page-work.world-v2 .brand-lockup img{filter:brightness(0) invert(1) sepia(.25) saturate(.7) brightness(1.06)!important}
+body.page-work.world-v2 .site-nav a{color:#eadbbd!important}
+body.page-work.world-v2 .page-hero{background:radial-gradient(circle at 82% 18%,rgba(178,138,73,.18),transparent 21rem),linear-gradient(118deg,var(--forest-2),#24362d 58%,#1b2822)!important;color:#f3e6cc!important;border-bottom:1px solid rgba(178,138,73,.45)!important}
+body.page-work.world-v2 .page-hero h1{font-family:var(--serif)!important;color:#f6ead1!important}
+body.page-work.world-v2 .page-hero p{color:rgba(240,228,204,.83)!important}
+body.page-work .section{position:relative}
+body.page-work .section:nth-of-type(even){background:rgba(218,197,158,.22)}
+body.page-work .section-head{padding-bottom:16px;border-bottom:3px double rgba(62,43,29,.24)}
+body.page-work .section-head h2{font-family:var(--serif)!important;color:var(--ink)!important}
+body.page-work .section-head>p{color:var(--ink-2)!important}
+body.page-work .format-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:0;border-top:1px solid var(--rule);border-left:1px solid var(--rule)}
+body.page-work .format-card{padding:20px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);background:rgba(246,236,217,.5)}
+body.page-work .format-card h3{font-family:var(--serif)!important;font-size:1.35rem!important}
+body.page-work .format-card p{font-size:.72rem;color:var(--ink-2)!important}
+body.page-work .format-icon{color:var(--oxblood)!important}
+body.page-work .cta-band{padding:70px 0;background:var(--forest-2)!important;color:#f0e1c1!important}
+body.page-work .cta-band h2{color:#f3e4c4!important;font-family:var(--serif)!important}
+body.page-work .cta-band p{color:rgba(240,225,193,.75)!important}
+body.page-work .ebook-sample-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}
+body.page-work .ebook-sample-card{padding:18px;border:1px solid rgba(68,47,30,.2);background:var(--paper);box-shadow:var(--shadow)}
+body.page-work .ebook-scroll-frame{border:7px solid #35261d!important;box-shadow:0 0 0 2px #a88448,inset 0 0 0 1px rgba(255,255,255,.12)!important;background:#fff!important}
+@media(max-width:980px){body.page-work .format-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:760px){body.page-work .format-grid{grid-template-columns:1fr 1fr}body.page-work .ebook-sample-grid{grid-template-columns:1fr}}
