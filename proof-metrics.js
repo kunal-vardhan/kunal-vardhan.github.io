@@ -62,6 +62,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   });
 
   let visible=false;
+  const threshold=document.querySelector('[data-threshold]');
+  let thresholdReady=!threshold||threshold.classList.contains('is-proof-ready');
   let cycleToken=0;
   const timers=new Set();
   const frames=new Set();
@@ -93,10 +95,10 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   const animate=(cfg,token)=>{
     later(()=>{
-      if(!visible||document.hidden||isBoring()||token!==cycleToken)return;
+      if(!visible||!thresholdReady||document.hidden||isBoring()||token!==cycleToken)return;
       const started=performance.now();
       const tick=now=>{
-        if(!visible||document.hidden||isBoring()||token!==cycleToken)return;
+        if(!visible||!thresholdReady||document.hidden||isBoring()||token!==cycleToken)return;
         const raw=Math.min(1,(now-started)/cfg.duration);
         const eased=1-Math.pow(1-raw,4);
         setValue(cfg,cfg.start+(cfg.end-cfg.start)*eased);
@@ -113,7 +115,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   };
 
   const runCycle=()=>{
-    if(!visible||document.hidden||isBoring()){
+    if(!visible||!thresholdReady||document.hidden||isBoring()){
       setFinal();
       return;
     }
@@ -121,17 +123,17 @@ document.addEventListener('DOMContentLoaded',()=>{
 
     configs.forEach(cfg=>cfg.el.classList.add('is-resetting'));
     later(()=>{
-      if(token!==cycleToken||!visible||isBoring())return;
+      if(token!==cycleToken||!visible||!thresholdReady||isBoring())return;
       configs.forEach(cfg=>setValue(cfg,cfg.start));
     },170);
     later(()=>{
-      if(token!==cycleToken||!visible||isBoring())return;
+      if(token!==cycleToken||!visible||!thresholdReady||isBoring())return;
       configs.forEach(cfg=>cfg.el.classList.remove('is-resetting'));
       configs.forEach(cfg=>animate(cfg,token));
     },360);
 
     later(()=>{
-      if(token===cycleToken&&visible&&!document.hidden&&!isBoring())runCycle();
+      if(token===cycleToken&&visible&&thresholdReady&&!document.hidden&&!isBoring())runCycle();
     },9600);
   };
 
@@ -140,7 +142,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     visible=value;
     cancelWork();
     setFinal();
-    if(visible&&!document.hidden&&!isBoring())later(runCycle,520);
+    if(visible&&thresholdReady&&!document.hidden&&!isBoring())later(runCycle,520);
   };
 
   if('IntersectionObserver' in window){
@@ -153,15 +155,23 @@ document.addEventListener('DOMContentLoaded',()=>{
     setVisible(true);
   }
 
+  window.addEventListener('portfolio:threshold-open',()=>{
+    if(thresholdReady)return;
+    thresholdReady=true;
+    cancelWork();
+    setFinal();
+    if(visible&&!document.hidden&&!isBoring())later(runCycle,180);
+  });
+
   document.addEventListener('visibilitychange',()=>{
     cancelWork();
     setFinal();
-    if(!document.hidden&&visible&&!isBoring())later(runCycle,500);
+    if(!document.hidden&&visible&&thresholdReady&&!isBoring())later(runCycle,500);
   });
 
   window.addEventListener('portfolio:boringchange',event=>{
     cancelWork();
     setFinal();
-    if(!event.detail?.boring&&visible&&!document.hidden)later(runCycle,420);
+    if(!event.detail?.boring&&visible&&thresholdReady&&!document.hidden)later(runCycle,420);
   });
 });
