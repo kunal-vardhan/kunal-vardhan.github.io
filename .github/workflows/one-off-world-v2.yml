@@ -1,0 +1,136 @@
+name: One-off world v2 rollout
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/one-off-world-v2.yml'
+permissions:
+  contents: write
+jobs:
+  rollout:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify main is unchanged
+        run: |
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+      - name: Roll out world v2
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          pages = {
+              'index.html': 'magic-home world-v2 page-home',
+              'strategy.html': 'world-v2 page-strategy',
+              'work.html': 'world-v2 page-work',
+              'about.html': 'world-v2 page-about',
+              'case-studies/index.html': 'world-v2 page-cases',
+              'case-studies/api-organic-growth.html': 'world-v2 page-case case-api',
+              'case-studies/logistics-search-growth.html': 'world-v2 page-case case-logistics',
+              'case-studies/enterprise-software-content.html': 'world-v2 page-case case-enterprise',
+              'case-studies/learniverse-growth.html': 'world-v2 page-case case-learniverse',
+          }
+
+          for filename, body_class in pages.items():
+              p = Path(filename)
+              s = p.read_text()
+              if '/world-v2.css?v=1' not in s:
+                  s = s.replace('</head>', '<link rel="stylesheet" href="/world-v2.css?v=1"></head>', 1)
+              if '/world-v2.js?v=1' not in s:
+                  s = s.replace('</body>', '<script src="/world-v2.js?v=1" defer></script></body>', 1)
+              if '<body class=' in s:
+                  import re
+                  s, n = re.subn(r'<body class="[^"]*">', f'<body class="{body_class}">', s, count=1)
+                  if not n:
+                      raise SystemExit(f'Could not set body class in {filename}')
+              else:
+                  if '<body>' not in s:
+                      raise SystemExit(f'Body marker missing in {filename}')
+                  s = s.replace('<body>', f'<body class="{body_class}">', 1)
+              p.write_text(s)
+
+          # Homepage: retire the literal doorway while keeping all portfolio content and proof.
+          p = Path('index.html')
+          s = p.read_text()
+          for old in [
+              '<link rel="stylesheet" href="/magic-foundation.css?v=1">',
+              '<link rel="stylesheet" href="/threshold-entrance.css?v=1">',
+              '<script src="/magic-foundation.js?v=1" defer></script>',
+              '<script src="/threshold-entrance.js?v=2" defer></script>',
+          ]:
+              s = s.replace(old, '')
+          s = s.replace('<div class="threshold-shell" data-threshold>', '<div class="threshold-shell is-open is-proof-ready" data-threshold>', 1)
+          replacements = {
+              'Some of the brands I’ve written for': "Some names you may recognise. A few you probably won't.",
+              'Before I write, I need to know what the content is supposed to do.': "Please don't give me the content calendar yet.",
+              'Pages, not just article links.': 'Things that look better than a blue hyperlink.',
+              'A few things people have said after working with me.': 'Apparently I was tolerable to work with.',
+              'I started as a writer. The work gradually became bigger than the draft.': 'There is a biotechnology degree in this story. Somehow.',
+          }
+          for old, new in replacements.items():
+              if old not in s:
+                  raise SystemExit(f'Homepage copy marker missing: {old}')
+              s = s.replace(old, new, 1)
+          p.write_text(s)
+
+          # Strategy positioning stays clear, but sounds like Kunal.
+          p = Path('strategy.html')
+          s = p.read_text()
+          old = 'I do not want a content calendar until I know why the content should exist.'
+          if old not in s: raise SystemExit('Strategy hero marker missing')
+          s = s.replace(old, "Please don't give me a content calendar yet.", 1)
+          p.write_text(s)
+
+          # Work library keeps every sample and every scrolling preview. Only the framing changes.
+          p = Path('work.html')
+          s = p.read_text()
+          old = 'Writing, website copy, commercial pages, and the work around them.'
+          if old not in s: raise SystemExit('Work hero marker missing')
+          s = s.replace(old, 'Articles, websites, commercial pages, eBooks, and the stuff around them.', 1)
+          p.write_text(s)
+
+          # About: remove the rejected isolated Lumos demo, keep the facts, and turn them into the common-room layer.
+          p = Path('about.html')
+          s = p.read_text()
+          s = s.replace('<link rel="stylesheet" href="/about-magic.css?v=1">', '')
+          s = s.replace('<script src="/about-magic.js?v=1" defer></script>', '')
+          about_replacements = {
+              'I started with writing. Over time, the work expanded around it.': 'I write for a living. Somehow biotechnology was involved.',
+              'A few things about me that have absolutely nothing to do with keyword difficulty.': 'The part where this gets less professional.',
+              'This part is intentionally less professional. Move the light around. There are a few things hiding in here.': 'Harry Potter, games, biotechnology, and one increasingly unreasonable punctuation feud.',
+              'If you need someone who can think through the content and still write it, get in touch.': 'Want to talk?',
+          }
+          for old, new in about_replacements.items():
+              if old not in s: raise SystemExit(f'About copy marker missing: {old}')
+              s = s.replace(old, new, 1)
+          p.write_text(s)
+
+          # Case hub becomes the archive entrance. Individual case-study substance is untouched.
+          p = Path('case-studies/index.html')
+          s = p.read_text()
+          old = 'The work makes more sense with the context around it.'
+          if old not in s: raise SystemExit('Case hub hero marker missing')
+          s = s.replace(old, 'Four projects. I kept the receipts.', 1)
+          p.write_text(s)
+          PY
+      - name: Verify protected work mechanics are still referenced
+        run: |
+          grep -q 'work-preview-motion.css' work.html
+          grep -q 'page-scroll-frame' work.html
+          grep -q 'ebook-library.css' work.html
+          grep -q 'work-preview-motion.js' work.html
+          grep -q 'ebook-preview-motion.js' work.html
+          grep -q '29 → 3,842' case-studies/api-organic-growth.html
+          grep -q '0 → ~2,500' case-studies/learniverse-growth.html
+      - name: Commit and push
+        run: |
+          git config user.name "Kunal Vardhan"
+          git config user.email "kunalwritescopy@gmail.com"
+          git fetch origin main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          git add index.html strategy.html work.html about.html case-studies/index.html case-studies/*.html
+          git commit -m "Roll enchanted editorial redesign across portfolio"
+          git push origin HEAD:main
