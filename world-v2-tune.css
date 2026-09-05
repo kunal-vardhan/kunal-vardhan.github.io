@@ -99,6 +99,9 @@ body.world-v2 .footer-wrap a{
   line-height:1.4!important;
 }
 
+/* Homepage no longer exposes the boring/fun mode control. */
+body.page-home .boring-bar{display:none!important}
+
 /* Potter references are part of the messaging, not a theme-park overlay. */
 .world-hp-note{
   display:inline-block;
