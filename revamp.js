@@ -2,10 +2,17 @@
   const body = document.body;
   if (!body?.classList.contains('hp-site')) return;
 
+  const fixes = document.createElement('link');
+  fixes.rel = 'stylesheet';
+  fixes.href = '/revamp-fixes.css?v=1';
+  document.head.appendChild(fixes);
+
+  const year = document.getElementById('year');
+  if (year) year.textContent = String(new Date().getFullYear());
+
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const finePointer = window.matchMedia('(pointer:fine)');
 
-  // Mobile spellbook navigation
   const menuButton = document.querySelector('.menu-toggle');
   const nav = document.querySelector('.spellbook-nav');
   if (menuButton && nav) {
@@ -20,7 +27,6 @@
     });
   }
 
-  // Quiet reveal motion
   const revealTargets = [...document.querySelectorAll('.section-head,.prophet-story,.process-step,.visual-card,.letter,.about-room,.strategy-intake-card,.infographic-card,.roadmap-stop,.visual-work-card,.case-frontpage-card,.case-article-revamp>section,.off-duty-card,.brand-wall-revamp>div,.contact-letter')];
   if (reduceMotion.matches || !('IntersectionObserver' in window)) {
     revealTargets.forEach(el => el.classList.add('reveal','visible'));
@@ -36,7 +42,6 @@
     revealTargets.forEach(el => observer.observe(el));
   }
 
-  // Wand cursor on desktop only
   if (finePointer.matches && !reduceMotion.matches) {
     document.documentElement.classList.add('wand-live');
     const style = document.createElement('style');
@@ -48,13 +53,7 @@
     wand.setAttribute('aria-hidden','true');
     body.appendChild(wand);
 
-    let x = innerWidth / 2;
-    let y = innerHeight / 2;
-    let tx = x;
-    let ty = y;
-    let raf = 0;
-    let lastSpark = 0;
-
+    let x = innerWidth / 2, y = innerHeight / 2, tx = x, ty = y, raf = 0, lastSpark = 0;
     const tick = () => {
       x += (tx - x) * .42;
       y += (ty - y) * .42;
@@ -62,7 +61,6 @@
       if (Math.abs(tx - x) > .3 || Math.abs(ty - y) > .3) raf = requestAnimationFrame(tick);
       else raf = 0;
     };
-
     const spark = (sx, sy, burst = false) => {
       const count = burst ? 4 : 1;
       for (let i = 0; i < count; i += 1) {
@@ -78,31 +76,24 @@
         dot.addEventListener('animationend', () => dot.remove(), { once: true });
       }
     };
-
     window.addEventListener('pointermove', event => {
       if (event.pointerType && event.pointerType !== 'mouse') return;
-      tx = event.clientX;
-      ty = event.clientY;
+      tx = event.clientX; ty = event.clientY;
       wand.classList.add('visible');
       wand.classList.toggle('link', !!event.target.closest('a,button,[role="button"]'));
       if (!raf) raf = requestAnimationFrame(tick);
       const now = performance.now();
-      if (now - lastSpark > 72) {
-        lastSpark = now;
-        spark(event.clientX + 17, event.clientY - 11);
-      }
-    }, { passive: true });
+      if (now - lastSpark > 72) { lastSpark = now; spark(event.clientX + 17, event.clientY - 11); }
+    }, { passive:true });
     window.addEventListener('mouseout', event => { if (!event.relatedTarget) wand.classList.remove('visible'); });
     window.addEventListener('pointerdown', event => {
       if (event.pointerType && event.pointerType !== 'mouse') return;
       spark(event.clientX + 17, event.clientY - 11, true);
-    }, { passive: true });
+    }, { passive:true });
   }
 
-  // Broom scroll progress + back to top
   const rail = document.createElement('div');
   rail.className = 'broom-rail';
-  rail.setAttribute('aria-hidden','false');
   const broom = document.createElement('button');
   broom.type = 'button';
   broom.className = 'broom-button';
@@ -110,7 +101,6 @@
   broom.innerHTML = '<svg viewBox="0 0 30 54" aria-hidden="true"><path d="M19 3 11 37" stroke="#5a3c27" stroke-width="2.2" stroke-linecap="round"/><path d="M9 34c5 0 9 2 12 7-4 8-10 10-17 11 4-6 5-11 5-18Z" fill="#b28a49" stroke="#6c4b2e"/><path d="m7 40 12 3M6 44l11 2M5 48l9 1" stroke="#725031" stroke-width=".8"/></svg>';
   rail.appendChild(broom);
   body.appendChild(rail);
-
   let scrollRaf = 0;
   const updateBroom = () => {
     scrollRaf = 0;
@@ -126,7 +116,6 @@
   broom.addEventListener('click', () => window.scrollTo({ top:0, behavior: reduceMotion.matches ? 'auto' : 'smooth' }));
   requestAnimationFrame(updateBroom);
 
-  // Homepage Snitch easter egg
   const snitch = document.querySelector('.snitch-button');
   if (snitch) {
     const toast = document.createElement('div');
@@ -143,7 +132,6 @@
     });
   }
 
-  // Animate roadmap train through the stops as they enter view
   const marker = document.querySelector('.train-marker');
   const stops = [...document.querySelectorAll('.roadmap-stop')];
   if (marker && stops.length && !reduceMotion.matches && 'IntersectionObserver' in window) {
@@ -151,14 +139,12 @@
       entries.forEach(entry => {
         if (!entry.isIntersecting) return;
         const index = stops.indexOf(entry.target);
-        if (index < 0) return;
-        marker.style.left = `${7 + index * (86 / Math.max(1, stops.length - 1))}%`;
+        if (index >= 0) marker.style.left = `${7 + index * (86 / Math.max(1, stops.length - 1))}%`;
       });
-    }, { threshold: .55 });
+    }, { threshold:.55 });
     stops.forEach(stop => roadObserver.observe(stop));
   }
 
-  // Contact cue without delaying mailto
   document.querySelectorAll('a[href^="mailto:"]').forEach(link => {
     link.addEventListener('pointerdown', () => {
       const note = link.closest('.contact-letter')?.querySelector('.owl-note');
@@ -169,7 +155,6 @@
     }, { passive:true });
   });
 
-  // Marauder's Map inspired navigation. Trigger is real footer UI on every page.
   const trigger = document.querySelector('.mischief-button');
   if (trigger) {
     const map = document.createElement('div');
@@ -180,16 +165,9 @@
       <div class="hp-map-backdrop" data-map-close></div>
       <section class="hp-map-sheet" role="dialog" aria-modal="true" aria-labelledby="hp-map-title">
         <button class="hp-map-close" type="button" data-map-close>Fold the map</button>
-        <div class="hp-map-head">
-          <span>Kunal Vardhan · Portfolio map</span>
-          <h2 id="hp-map-title">I probably shouldn't show you this.</h2>
-          <p>Too late. Pick a room.</p>
-        </div>
+        <div class="hp-map-head"><span>Kunal Vardhan · Portfolio map</span><h2 id="hp-map-title">I probably shouldn't show you this.</h2><p>Too late. Pick a room.</p></div>
         <div class="hp-map-field">
-          <svg class="hp-map-path" viewBox="0 0 1000 560" preserveAspectRatio="none" aria-hidden="true">
-            <path class="base" d="M118 300 C205 160 300 165 388 270 S535 420 615 270 S785 132 890 260"/>
-            <path class="draw" d="M118 300 C205 160 300 165 388 270 S535 420 615 270 S785 132 890 260"/>
-          </svg>
+          <svg class="hp-map-path" viewBox="0 0 1000 560" preserveAspectRatio="none" aria-hidden="true"><path class="base" d="M118 300 C205 160 300 165 388 270 S535 420 615 270 S785 132 890 260"/><path class="draw" d="M118 300 C205 160 300 165 388 270 S535 420 615 270 S785 132 890 260"/></svg>
           <a class="hp-map-stop home" href="/"><b>01</b><strong>Home</strong><small>The front door</small></a>
           <a class="hp-map-stop cases" href="/case-studies/"><b>02</b><strong>Case studies</strong><small>The receipts</small></a>
           <a class="hp-map-stop strategy" href="/strategy.html"><b>03</b><strong>Strategy</strong><small>The map room</small></a>
@@ -200,10 +178,8 @@
         </div>
       </section>`;
     body.appendChild(map);
-
     const firstStop = map.querySelector('.hp-map-stop');
-    let restoreFocus = null;
-    let closeTimer;
+    let restoreFocus = null, closeTimer;
     const openMap = () => {
       clearTimeout(closeTimer);
       restoreFocus = document.activeElement;
@@ -219,12 +195,8 @@
       map.classList.remove('open');
       trigger.setAttribute('aria-expanded','false');
       body.style.overflow = '';
-      const finish = () => {
-        map.hidden = true;
-        restoreFocus?.focus?.({ preventScroll:true });
-      };
-      if (reduceMotion.matches) finish();
-      else closeTimer = setTimeout(finish, 330);
+      const finish = () => { map.hidden = true; restoreFocus?.focus?.({ preventScroll:true }); };
+      if (reduceMotion.matches) finish(); else closeTimer = setTimeout(finish,330);
     };
     trigger.addEventListener('click', openMap);
     map.querySelectorAll('[data-map-close]').forEach(el => el.addEventListener('click', closeMap));
