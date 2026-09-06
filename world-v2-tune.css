@@ -61,8 +61,8 @@ body.page-home .threshold-shell .story-hero{
   padding:clamp(66px,7vw,98px) 0 clamp(62px,7vw,92px)!important;
 }
 
-/* Decorative route must never create extra document height. */
-body.world-v2 main{overflow:clip}
+/* Decorative route must never create horizontal overflow, but vertical details may hang outside cards. */
+body.world-v2 main{overflow-x:clip;overflow-y:visible}
 body.world-v2 .world-route{
   top:0!important;
   bottom:0!important;
@@ -155,6 +155,26 @@ body.world-v2 .case-meta>div,
 body.world-v2 .brand-mark{
   min-width:0;
   overflow-wrap:anywhere;
+}
+
+/* Case studies should hang with the same imperfect rhythm as the work samples. */
+body.page-cases .case-hub-card{
+  transform-origin:50% 0;
+  transition:transform .55s cubic-bezier(.16,.84,.22,1),box-shadow .45s ease;
+}
+body.page-cases .case-hub-card:nth-child(1){transform:rotate(-.42deg)}
+body.page-cases .case-hub-card:nth-child(2){transform:rotate(.52deg)}
+body.page-cases .case-hub-card:nth-child(3){transform:rotate(-.34deg)}
+body.page-cases .case-hub-card:nth-child(4){transform:rotate(.44deg)}
+body.page-cases .case-hub-card:hover,
+body.page-cases .case-hub-card:focus-within{
+  transform:rotate(0) translateY(-5px);
+  box-shadow:0 28px 68px rgba(48,35,29,.14);
+}
+body.page-cases .case-hub-card::before{
+  top:-12px!important;
+  z-index:5;
+  box-shadow:0 4px 10px rgba(48,35,29,.12);
 }
 
 /* Strategy: show the relationship, don't make the reader infer it. */
@@ -269,4 +289,5 @@ body.page-work .work-filter[aria-pressed="true"]{
     background:#dfd0b8;
     border-color:rgba(168,135,85,.45);
   }
+  body.page-cases .case-hub-card:nth-child(n){transform:none}
 }
