@@ -1,0 +1,84 @@
+name: Minor portfolio cleanup
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/minor-site-cleanup.yml']
+permissions:
+  contents: write
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Apply targeted cleanup
+        shell: python
+        run: |
+          from pathlib import Path
+          import shutil
+
+          def replace(path, old, new):
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              if old not in text:
+                  raise SystemExit(f'Expected text not found in {path}: {old[:80]}')
+              p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          replace(
+              'index.html',
+              '<h1>Complicated product? Good. Those are more fun to explain.</h1>',
+              '<h1>I make complicated products easier to understand.</h1>'
+          )
+          replace(
+              'index.html',
+              '<p class="hero-text">I write and plan content for B2B SaaS, APIs, logistics, cybersecurity, and other products that need more than “just make it simple.” Sometimes that means an article. Sometimes a roadmap, comparison page, landing page, refresh plan, or a whole cluster that finally makes sense.</p>',
+              '<p class="hero-text">Most of my recent work has been in B2B SaaS, APIs, logistics, cybersecurity, and enterprise software. I write the articles, pages, comparisons, and guides people need when they are trying to understand a product or decide if it is right for them. I also plan what should be written, refreshed, or connected.</p>'
+          )
+          replace(
+              'index.html',
+              '<img src="/profile.webp" alt="Kunal Vardhan" loading="lazy">',
+              '<img src="/profile.webp" width="1050" height="949" alt="Kunal Vardhan" loading="lazy" decoding="async">'
+          )
+          replace(
+              'about.html',
+              '<div class="about-photo"><img src="/profile.webp" alt="Kunal Vardhan"></div>',
+              '<div class="about-photo"><img src="/profile.webp" width="1050" height="949" alt="Kunal Vardhan" loading="lazy" decoding="async"></div>'
+          )
+          replace(
+              'strategy.html',
+              '<iframe class="workbook-frame" src="/strategy-workbook.html?v=2" title="Illustrative content strategy workbook"></iframe>',
+              '<iframe class="workbook-frame" src="/strategy-workbook.html?v=2" title="Illustrative content strategy workbook" loading="lazy"></iframe>'
+          )
+
+          canonicals = {
+              'strategy.html': 'https://kunal-vardhan.github.io/strategy.html',
+              'work.html': 'https://kunal-vardhan.github.io/work.html',
+              'about.html': 'https://kunal-vardhan.github.io/about.html',
+              'case-studies/index.html': 'https://kunal-vardhan.github.io/case-studies/',
+          }
+          for path, url in canonicals.items():
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              if 'rel="canonical"' not in text:
+                  marker = '<link rel="icon" href="/favicon.svg" type="image/svg+xml">'
+                  if marker not in text:
+                      raise SystemExit(f'Icon marker missing in {path}')
+                  text = text.replace(marker, f'<link rel="canonical" href="{url}">{marker}', 1)
+                  p.write_text(text, encoding='utf-8')
+
+          preview = Path('hp-preview')
+          if preview.exists():
+              shutil.rmtree(preview)
+      - name: Commit cleanup
+        run: |
+          if git diff --quiet; then
+            echo "No cleanup changes needed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Clean up portfolio pages and remove rejected preview"
+          git push origin HEAD:main
