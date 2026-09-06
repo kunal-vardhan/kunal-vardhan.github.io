@@ -2,7 +2,8 @@ name: Fix visible site issues
 on:
   push:
     branches: [main]
-    paths: ['.github/workflows/fix-visible-site-issues.yml']
+    paths:
+      - .github/workflows/fix-visible-site-issues.yml
 permissions:
   contents: write
 jobs:
@@ -14,12 +15,12 @@ jobs:
           ref: main
           fetch-depth: 0
       - name: Apply visible cleanup fixes
-        shell: python
+        shell: bash
         run: |
+          python - <<'PY'
           from pathlib import Path
+          import base64
 
-          # 1) Homepage process map: remove the misleading Buyer -> Create branch
-          # and make the visible route follow the actual sequence.
           p = Path('index.html')
           text = p.read_text(encoding='utf-8')
           old = '<path d="M135 56h35M280 56h35M425 56h35M525 82C518 124 459 139 420 170M300 196h55M235 170C230 130 190 115 225 82"/>'
@@ -28,7 +29,6 @@ jobs:
               raise SystemExit('Homepage workflow path not found')
           p.write_text(text.replace(old, new, 1), encoding='utf-8')
 
-          # 2) Work Library: stop loading the obsolete ebook CSS after v3.
           p = Path('story.js')
           text = p.read_text(encoding='utf-8')
           old = "if(location.pathname==='/work.html'||location.pathname==='/work'){const ebookStyles=document.createElement('link');ebookStyles.rel='stylesheet';ebookStyles.href='/ebook-library.css?v=1';document.head.appendChild(ebookStyles);}"
@@ -36,8 +36,6 @@ jobs:
               raise SystemExit('Legacy ebook stylesheet injector not found')
           p.write_text(text.replace(old, '', 1), encoding='utf-8')
 
-          # 3) About: the old board is no longer an interactive Lumos demo,
-          # so do not advertise hidden controls to keyboard/screen-reader users.
           p = Path('about.html')
           text = p.read_text(encoding='utf-8')
           old = '<div class="lumos-board" tabindex="0" aria-label="Interactive personal facts. Move your pointer around the board, tap a fact on touch devices, or use the Lumos control to reveal everything.">'
@@ -46,72 +44,16 @@ jobs:
               raise SystemExit('Old Lumos accessibility label not found')
           p.write_text(text.replace(old, new, 1), encoding='utf-8')
 
-          # 4) Shared visual corrections from the live screenshots.
           p = Path('world-v2-tune.css')
           text = p.read_text(encoding='utf-8')
           marker = '/* Screenshot QA: visible cleanup pass. */'
+          css_b64 = 'Ci8qIFNjcmVlbnNob3QgUUE6IHZpc2libGUgY2xlYW51cCBwYXNzLiAqLwoKLyogQ2FzZSBvdXRjb21lcyBtdXN0IHN0YXkgcmVhZGFibGUsIGluY2x1ZGluZyBkdXJpbmcgdGhlIHNjYW4gYW5pbWF0aW9uLiAqLwpib2R5LnBhZ2UtY2FzZXMgLmNhc2Utb3V0Y29tZSwKYm9keS5wYWdlLWNhc2VzIC5jYXNlLWh1Yi1jYXJkLmlzLXN0ZXAtcmVzdWx0IC5jYXNlLW91dGNvbWUsCmJvZHkucGFnZS1jYXNlcyAuY2FzZS1odWItY2FyZC5oYXMtZm9jdXNlZC1zdGVwIC5jYXNlLW91dGNvbWV7CiAgYmFja2dyb3VuZDojMzAyMzFkIWltcG9ydGFudDsKICBib3JkZXI6MXB4IHNvbGlkIHJnYmEoMTY4LDEzNSw4NSwuNTUpIWltcG9ydGFudDsKfQpib2R5LnBhZ2UtY2FzZXMgLmNhc2Utb3V0Y29tZSBzdHJvbmd7Y29sb3I6I2Y3ZTljOSFpbXBvcnRhbnR9CmJvZHkucGFnZS1jYXNlcyAuY2FzZS1vdXRjb21lIHNwYW57Y29sb3I6cmdiYSgyNDcsMjMzLDIwMSwuNzgpIWltcG9ydGFudH0KCi8qIFN0cmF0ZWd5IGJyaWRnZSBiZWxvbmdzIGluc2lkZSB0aGUgaW5mb2dyYXBoaWMsIG5vdCBvdXRzaWRlIHRoZSBwYW5lbC4gKi8KYm9keS5wYWdlLXN0cmF0ZWd5IC5zdHJhdGVneS1ncmlkLTJ7b3ZlcmZsb3c6aGlkZGVufQpib2R5LnBhZ2Utc3RyYXRlZ3kgLnN0cmF0ZWd5LWFzc2V0LWJyaWRnZXtvdmVyZmxvdzpoaWRkZW4haW1wb3J0YW50fQpib2R5LnBhZ2Utc3RyYXRlZ3kgLnN0cmF0ZWd5LWJyaWRnZS1sYWJlbHttYXgtd2lkdGg6MTEwcHg7dGV4dC1hbGlnbjpjZW50ZXJ9CgovKiBBYm91dCBzaG91bGQgc3RheSBxdWlldC4gVGhlIGdsb2JhbCBkZWNvcmF0aXZlIHJvdXRlIHdhcyBjcm9zc2luZyByZWFkYWJsZSBjb3B5LiAqLwpib2R5LnBhZ2UtYWJvdXQgLndvcmxkLXJvdXRle2Rpc3BsYXk6bm9uZSFpbXBvcnRhbnR9CgovKiBDb250YWN0IGJsb2NrIG5lZWRzIGJyZWF0aGluZyByb29tIGFuZCBhIHByb3RlY3RlZCBhcmVhIGZvciB0aGUgb3dsIG5vdGUuICovCmJvZHkucGFnZS1hYm91dCAuY29udGFjdC1jYXJkewogIHBhZGRpbmc6MzBweCAzMnB4IDM4cHghaW1wb3J0YW50OwogIGdhcDoyOHB4IWltcG9ydGFudDsKICBhbGlnbi1pdGVtczpjZW50ZXIhaW1wb3J0YW50Owp9CmJvZHkucGFnZS1hYm91dCAuY29udGFjdC1jYXJkIC5leWVicm93e21hcmdpbi10b3A6MCFpbXBvcnRhbnR9CmJvZHkucGFnZS1hYm91dCAuY29udGFjdC1jYXJkIGgye21hcmdpbi10b3A6OHB4IWltcG9ydGFudH0KYm9keS5wYWdlLWFib3V0IC5jb250YWN0LWNhcmQ+ZGl2OmZpcnN0LWNoaWxkPnA6bGFzdC1jaGlsZHttYXgtd2lkdGg6NzYwcHg7bWFyZ2luLWJvdHRvbTowIWltcG9ydGFudH0KYm9keS5wYWdlLWFib3V0IC5jb250YWN0LWFjdGlvbnN7Z2FwOjEwcHghaW1wb3J0YW50O2ZsZXgtd3JhcDp3cmFwIWltcG9ydGFudDtqdXN0aWZ5LWNvbnRlbnQ6ZmxleC1lbmR9CmJvZHkucGFnZS1hYm91dCAuY29udGFjdC1jYXJkOjphZnRlcntyaWdodDoyOHB4IWltcG9ydGFudDtib3R0b206MTRweCFpbXBvcnRhbnR9CgovKiBLZWVwIHRoZSBXb3JrIExpYnJhcnkgbGFiZWxzIHJlYWRhYmxlIGF0IG5vcm1hbCBsYXB0b3Agd2lkdGhzLiAqLwpib2R5LnBhZ2Utd29yayAudmlzdWFsLXdvcmstaGVhZCBzcGFuLApib2R5LnBhZ2Utd29yayAuZWJvb2stc2FtcGxlLWNhcmQgLnZpc3VhbC13b3JrLWhlYWQgc3Bhbntmb250LXNpemU6LjU4cmVtIWltcG9ydGFudDtsaW5lLWhlaWdodDoxLjM1IWltcG9ydGFudH0KYm9keS5wYWdlLXdvcmsgLnZpc3VhbC13b3JrLWhlYWQgaDMsCmJvZHkucGFnZS13b3JrIC5lYm9vay1zYW1wbGUtY2FyZCAudmlzdWFsLXdvcmstaGVhZCBoM3tsaW5lLWhlaWdodDoxLjI1IWltcG9ydGFudH0KYm9keS5wYWdlLXdvcmsgLmVib29rLXNhbXBsZS1jYXJkPnAsCmJvZHkucGFnZS13b3JrIC5lYm9vay1zYW1wbGUtY2FyZCAuZWJvb2stY2FwdGlvbntmb250LXNpemU6LjY2cmVtIWltcG9ydGFudDtsaW5lLWhlaWdodDoxLjUhaW1wb3J0YW50fQoKLyogVGhlIGlycmVndWxhciBob21lcGFnZSBjYXNlIHNoYXBlcyBzdGF5LCBidXQgdGhlIEFwdHkgZnJhbWUgc2hvdWxkIG5vdCBsb29rIGJyb2tlbi4gKi8KYm9keS5wYWdlLWhvbWUgLmVuY2hhbnRlZC1jYXNlcyAuZmVhdHVyZS1jYXJkOm50aC1jaGlsZCgzKXsKICBib3JkZXItcmFkaXVzOjMwcHggMzBweCA5MnB4IDMwcHghaW1wb3J0YW50OwogIGJveC1zaGFkb3c6MCAyMHB4IDU1cHggcmdiYSg0OCwzNSwyOSwuMDgpIWltcG9ydGFudDsKfQpib2R5LnBhZ2UtaG9tZSAuZW5jaGFudGVkLWNhc2VzIC5mZWF0dXJlLWNhcmQ6bnRoLWNoaWxkKDMpOjpiZWZvcmV7CiAgYm9yZGVyLXJhZGl1czoyMnB4IDIycHggNzZweCAyMnB4IWltcG9ydGFudDsKfQoKQG1lZGlhKG1heC13aWR0aDo3NjBweCl7CiAgYm9keS5wYWdlLWFib3V0IC5jb250YWN0LWNhcmR7cGFkZGluZzoyNHB4IDIwcHggMzRweCFpbXBvcnRhbnR9CiAgYm9keS5wYWdlLWFib3V0IC5jb250YWN0LWFjdGlvbnN7anVzdGlmeS1jb250ZW50OmZsZXgtc3RhcnQhaW1wb3J0YW50fQogIGJvZHkucGFnZS1hYm91dCAuY29udGFjdC1jYXJkOjphZnRlcntsZWZ0OjIwcHghaW1wb3J0YW50O3JpZ2h0OmF1dG8haW1wb3J0YW50O2JvdHRvbToxMHB4IWltcG9ydGFudH0KICBib2R5LnBhZ2Utc3RyYXRlZ3kgLnN0cmF0ZWd5LWdyaWQtMntvdmVyZmxvdzp2aXNpYmxlfQp9Cg=='
           if marker not in text:
-              text += r'''
-
-/* Screenshot QA: visible cleanup pass. */
-
-/* Case outcomes must stay readable, including during the scan animation. */
-body.page-cases .case-outcome,
-body.page-cases .case-hub-card.is-step-result .case-outcome,
-body.page-cases .case-hub-card.has-focused-step .case-outcome{
-  background:#30231d!important;
-  border:1px solid rgba(168,135,85,.55)!important;
-}
-body.page-cases .case-outcome strong{color:#f7e9c9!important}
-body.page-cases .case-outcome span{color:rgba(247,233,201,.78)!important}
-
-/* Strategy bridge belongs inside the infographic, not outside the panel. */
-body.page-strategy .strategy-grid-2{overflow:hidden}
-body.page-strategy .strategy-asset-bridge{overflow:hidden!important}
-body.page-strategy .strategy-bridge-label{max-width:110px;text-align:center}
-
-/* About should stay quiet. The global decorative route was crossing readable copy. */
-body.page-about .world-route{display:none!important}
-
-/* Contact block needs breathing room and a protected area for the owl note. */
-body.page-about .contact-card{
-  padding:30px 32px 38px!important;
-  gap:28px!important;
-  align-items:center!important;
-}
-body.page-about .contact-card .eyebrow{margin-top:0!important}
-body.page-about .contact-card h2{margin-top:8px!important}
-body.page-about .contact-card>div:first-child>p:last-child{max-width:760px;margin-bottom:0!important}
-body.page-about .contact-actions{gap:10px!important;flex-wrap:wrap!important;justify-content:flex-end}
-body.page-about .contact-card::after{right:28px!important;bottom:14px!important}
-
-/* Keep the Work Library labels readable at normal laptop widths. */
-body.page-work .visual-work-head span,
-body.page-work .ebook-sample-card .visual-work-head span{font-size:.58rem!important;line-height:1.35!important}
-body.page-work .visual-work-head h3,
-body.page-work .ebook-sample-card .visual-work-head h3{line-height:1.25!important}
-body.page-work .ebook-sample-card>p,
-body.page-work .ebook-sample-card .ebook-caption{font-size:.66rem!important;line-height:1.5!important}
-
-/* The irregular homepage case shapes stay, but the Apty frame should not look broken. */
-body.page-home .enchanted-cases .feature-card:nth-child(3){
-  border-radius:30px 30px 92px 30px!important;
-  box-shadow:0 20px 55px rgba(48,35,29,.08)!important;
-}
-body.page-home .enchanted-cases .feature-card:nth-child(3)::before{
-  border-radius:22px 22px 76px 22px!important;
-}
-
-@media(max-width:760px){
-  body.page-about .contact-card{padding:24px 20px 34px!important}
-  body.page-about .contact-actions{justify-content:flex-start!important}
-  body.page-about .contact-card::after{left:20px!important;right:auto!important;bottom:10px!important}
-  body.page-strategy .strategy-grid-2{overflow:visible}
-}
-'''
+              text += base64.b64decode(css_b64).decode('utf-8')
               p.write_text(text, encoding='utf-8')
-
+          PY
       - name: Commit fixes
+        shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
