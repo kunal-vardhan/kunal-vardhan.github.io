@@ -27,6 +27,62 @@
   updateHeader();
   window.addEventListener('scroll', updateHeader, { passive: true });
 
+  /* Small navigation safeguards for keyboard and responsive use. */
+  const menuButton = document.querySelector('.menu-toggle');
+  const siteNav = document.getElementById('site-nav');
+  const closeMenu = () => {
+    if (!menuButton || !siteNav) return;
+    siteNav.classList.remove('open');
+    menuButton.setAttribute('aria-expanded', 'false');
+  };
+  if (menuButton && siteNav) {
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && siteNav.classList.contains('open')) {
+        closeMenu();
+        menuButton.focus({ preventScroll: true });
+      }
+    });
+    document.addEventListener('pointerdown', event => {
+      if (!siteNav.classList.contains('open')) return;
+      if (siteNav.contains(event.target) || menuButton.contains(event.target)) return;
+      closeMenu();
+    });
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 760) closeMenu();
+    }, { passive: true });
+  }
+
+  /* Decorative illustrations should stay out of the accessibility tree. */
+  document.querySelectorAll('.feature-visual svg, .case-thumb svg').forEach(svg => {
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('focusable', 'false');
+  });
+
+  /* Work Library cleanup: the page already loads the current eBook stylesheet. */
+  if (body.classList.contains('page-work')) {
+    const ebookSheets = [...document.querySelectorAll('link[rel="stylesheet"][href*="ebook-library.css"]')];
+    if (ebookSheets.length > 1) {
+      ebookSheets.forEach(link => {
+        if (/ebook-library\.css\?v=1(?:$|&)/.test(link.getAttribute('href') || '')) link.remove();
+      });
+    }
+    document.querySelectorAll('.work-filters').forEach(group => {
+      const buttons = [...group.querySelectorAll('.work-filter')];
+      const sync = () => buttons.forEach(button => button.setAttribute('aria-pressed', String(button.classList.contains('is-active'))));
+      sync();
+      buttons.forEach(button => button.addEventListener('click', () => requestAnimationFrame(sync)));
+    });
+  }
+
+  /* The About facts are now static cards, so do not advertise a retired interaction. */
+  if (body.classList.contains('page-about')) {
+    const board = document.querySelector('.lumos-board');
+    if (board) {
+      board.removeAttribute('tabindex');
+      board.removeAttribute('aria-label');
+    }
+  }
+
   /* A quiet route running through the whole document. */
   const main = document.querySelector('main');
   let routeSvg = null;
@@ -42,9 +98,8 @@
       routeSvg.innerHTML = '<path class="world-route-solid"></path><path></path>';
       main.prepend(routeSvg);
     }
-    const h = Math.max(main.scrollHeight, window.innerHeight);
+    const h = Math.max(main.offsetHeight, Math.round(main.getBoundingClientRect().height), window.innerHeight);
     routeSvg.setAttribute('viewBox', `0 0 1000 ${h}`);
-    routeSvg.style.height = `${h}px`;
     const points = [];
     const step = Math.max(520, Math.min(760, h / 8));
     for (let y = 120, i = 0; y < h - 100; y += step, i++) {
@@ -148,6 +203,49 @@
   window.addEventListener('resize', scheduleStrategy, { passive: true });
   window.addEventListener('load', scheduleStrategy, { once: true });
 
+  /* The topic structure should visually show that every supporting page connects to the core topic. */
+  const topicCluster = document.querySelector('.strategy-grid-2 .cluster');
+  const topicHub = topicCluster?.querySelector('.hub');
+  const topicNodes = topicCluster ? [...topicCluster.querySelectorAll('.node')] : [];
+  let topicLines = null;
+  let topicLineRaf = 0;
+  const drawTopicLines = () => {
+    topicLineRaf = 0;
+    if (!topicCluster || !topicHub || topicNodes.length !== 5 || innerWidth <= 700) return;
+    if (!topicLines) {
+      topicLines = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      topicLines.setAttribute('class', 'world-topic-lines');
+      topicLines.setAttribute('aria-hidden', 'true');
+      topicCluster.prepend(topicLines);
+    }
+    const box = topicCluster.getBoundingClientRect();
+    const hubRect = topicHub.getBoundingClientRect();
+    const hx = hubRect.left - box.left + hubRect.width / 2;
+    const hy = hubRect.top - box.top + hubRect.height / 2;
+    const w = Math.max(1, topicCluster.clientWidth);
+    const h = Math.max(1, topicCluster.clientHeight);
+    topicLines.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    topicLines.innerHTML = '';
+    topicNodes.forEach((node, index) => {
+      const rect = node.getBoundingClientRect();
+      const nx = rect.left - box.left + rect.width / 2;
+      const ny = rect.top - box.top + rect.height / 2;
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      const bendY = (hy + ny) / 2 + (index % 2 ? 7 : -7);
+      path.setAttribute('d', `M ${hx} ${hy} Q ${(hx + nx) / 2} ${bendY} ${nx} ${ny}`);
+      topicLines.appendChild(path);
+    });
+  };
+  const scheduleTopicLines = () => {
+    if (!topicLineRaf) topicLineRaf = requestAnimationFrame(drawTopicLines);
+  };
+  if (topicCluster) {
+    requestAnimationFrame(drawTopicLines);
+    document.fonts?.ready.then(drawTopicLines).catch(() => {});
+    window.addEventListener('resize', scheduleTopicLines, { passive: true });
+    window.addEventListener('load', scheduleTopicLines, { once: true });
+  }
+
   document.querySelectorAll('.roadmap article').forEach((article, index) => {
     article.dataset.worldStep = String(index + 1).padStart(2, '0');
   });
@@ -155,6 +253,17 @@
   /* Case-study sections become numbered records with a tiny reading compass. */
   const caseSections = [...document.querySelectorAll('.case-prose > section')];
   if (caseSections.length) {
+    const caseNavLinks = [...document.querySelectorAll('.case-aside a[href^="#"]')];
+    const setCurrentCaseSection = section => {
+      const id = section?.id;
+      caseNavLinks.forEach(link => {
+        const active = Boolean(id) && link.getAttribute('href') === `#${id}`;
+        link.classList.toggle('is-current', active);
+        if (active) link.setAttribute('aria-current', 'location');
+        else link.removeAttribute('aria-current');
+      });
+    };
+
     caseSections.forEach((section, index) => {
       section.dataset.worldIndex = String(index + 1).padStart(2, '0');
     });
@@ -170,8 +279,11 @@
         if (!visible) return;
         const index = caseSections.indexOf(visible.target);
         dots.forEach((dot, i) => dot.classList.toggle('is-active', i === index));
+        setCurrentCaseSection(visible.target);
       }, { threshold: [0.2, 0.45, 0.7], rootMargin: '-18% 0px -45% 0px' });
       caseSections.forEach(section => sectionObserver.observe(section));
+    } else {
+      setCurrentCaseSection(caseSections[0]);
     }
   }
 
@@ -283,6 +395,7 @@
     } else {
       scheduleRoute();
       scheduleStrategy();
+      scheduleTopicLines();
     }
   });
 })();
