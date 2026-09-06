@@ -144,6 +144,115 @@ body.page-home .brand-strip::after{
   white-space:nowrap;
 }
 
+/* Cleanup pass: clearer infographics and fewer edge-case layout breaks. */
+body.world-v2 h1,
+body.world-v2 h2,
+body.world-v2 h3,
+body.world-v2 .case-outcome,
+body.world-v2 .feature-result,
+body.world-v2 .case-page-metrics>div,
+body.world-v2 .case-meta>div,
+body.world-v2 .brand-mark{
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+
+/* Strategy: show the relationship, don't make the reader infer it. */
+body.page-strategy .strategy-grid-2 .cluster{
+  isolation:isolate;
+}
+body.page-strategy .world-topic-lines{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  width:100%;
+  height:100%;
+  overflow:visible;
+  pointer-events:none;
+}
+body.page-strategy .world-topic-lines path{
+  fill:none;
+  stroke:rgba(112,86,56,.48);
+  stroke-width:1.35;
+  stroke-linecap:round;
+  stroke-dasharray:5 6;
+  vector-effect:non-scaling-stroke;
+}
+body.page-strategy .strategy-grid-2 .cluster .hub,
+body.page-strategy .strategy-grid-2 .cluster .node{
+  z-index:2;
+}
+body.page-strategy .strategy-grid-2 .funnel{
+  position:relative;
+  padding-left:18px;
+}
+body.page-strategy .strategy-grid-2 .funnel::before{
+  content:"";
+  position:absolute;
+  left:5px;
+  top:14px;
+  bottom:14px;
+  width:1px;
+  background:linear-gradient(to bottom,rgba(168,135,85,.18),rgba(168,135,85,.62),rgba(168,135,85,.18));
+}
+body.page-strategy .strategy-grid-2 .funnel>div{
+  position:relative;
+  margin-bottom:8px;
+}
+body.page-strategy .strategy-grid-2 .funnel>div::before{
+  content:"";
+  position:absolute;
+  left:-18px;
+  top:50%;
+  width:7px;
+  height:7px;
+  border:1px solid #8b704d;
+  border-radius:50%;
+  background:#f4ebdc;
+  transform:translate(-50%,-50%);
+}
+body.page-strategy .strategy-grid-2 .funnel>div.is-active::before{
+  background:#6e7f73;
+  border-color:#6e7f73;
+  box-shadow:0 0 0 4px rgba(110,127,115,.12);
+}
+body.page-strategy .strategy-asset-output{
+  min-height:112px;
+}
+body.page-strategy .workbook-frame{
+  display:block;
+  width:100%;
+}
+
+/* Case-study navigation should tell the reader where they are. */
+body.page-case .case-aside a.is-current,
+body.page-case .case-aside a[aria-current="location"]{
+  color:#2d241f;
+  font-weight:700;
+}
+body.page-case .case-aside a.is-current::before,
+body.page-case .case-aside a[aria-current="location"]::before{
+  background:#a88755;
+  transform:translateY(-50%) scale(1.2);
+}
+
+/* Work Library: slightly stronger readability in the disclosure and filters. */
+body.page-work .byline-note p{
+  font-size:.8rem!important;
+  line-height:1.65!important;
+}
+body.page-work .work-filter[aria-pressed="true"]{
+  background:var(--world-walnut)!important;
+  color:#f1e6d3!important;
+}
+
+/* Keep the archive outcomes inside the viewport at medium desktop widths. */
+@media(max-width:1120px) and (min-width:761px){
+  body.page-cases .case-outcome{
+    right:-8px;
+  }
+}
+
 @media(max-width:760px){
   body.page-home .hero-copy h1{font-size:clamp(2.45rem,11.5vw,3.75rem)!important}
   body.page-home .section-head h2{font-size:clamp(1.75rem,8vw,2.55rem)!important}
@@ -153,4 +262,11 @@ body.page-home .brand-strip::after{
   body.page-home .brand-strip::after{display:none}
   body.world-v2 .footer-wrap{justify-content:flex-start!important;min-height:0!important}
   .world-footer-note{width:100%;white-space:normal}
+  body.page-strategy .world-topic-lines{display:none}
+  body.page-strategy .strategy-grid-2 .funnel{padding-left:16px}
+  body.page-case .case-aside a.is-current,
+  body.page-case .case-aside a[aria-current="location"]{
+    background:#dfd0b8;
+    border-color:rgba(168,135,85,.45);
+  }
 }
