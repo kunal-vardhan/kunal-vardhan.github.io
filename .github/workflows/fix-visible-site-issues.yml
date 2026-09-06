@@ -1,0 +1,120 @@
+name: Fix visible site issues
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/fix-visible-site-issues.yml']
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Apply visible cleanup fixes
+        shell: python
+        run: |
+          from pathlib import Path
+
+          # 1) Homepage process map: remove the misleading Buyer -> Create branch
+          # and make the visible route follow the actual sequence.
+          p = Path('index.html')
+          text = p.read_text(encoding='utf-8')
+          old = '<path d="M135 56h35M280 56h35M425 56h35M525 82C518 124 459 139 420 170M300 196h55M235 170C230 130 190 115 225 82"/>'
+          new = '<path d="M135 56h35M280 56h35M425 56h35M525 82C525 118 360 136 235 170M300 196h55"/>'
+          if old not in text:
+              raise SystemExit('Homepage workflow path not found')
+          p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          # 2) Work Library: stop loading the obsolete ebook CSS after v3.
+          p = Path('story.js')
+          text = p.read_text(encoding='utf-8')
+          old = "if(location.pathname==='/work.html'||location.pathname==='/work'){const ebookStyles=document.createElement('link');ebookStyles.rel='stylesheet';ebookStyles.href='/ebook-library.css?v=1';document.head.appendChild(ebookStyles);}"
+          if old not in text:
+              raise SystemExit('Legacy ebook stylesheet injector not found')
+          p.write_text(text.replace(old, '', 1), encoding='utf-8')
+
+          # 3) About: the old board is no longer an interactive Lumos demo,
+          # so do not advertise hidden controls to keyboard/screen-reader users.
+          p = Path('about.html')
+          text = p.read_text(encoding='utf-8')
+          old = '<div class="lumos-board" tabindex="0" aria-label="Interactive personal facts. Move your pointer around the board, tap a fact on touch devices, or use the Lumos control to reveal everything.">'
+          new = '<div class="lumos-board" aria-label="Personal facts">'
+          if old not in text:
+              raise SystemExit('Old Lumos accessibility label not found')
+          p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          # 4) Shared visual corrections from the live screenshots.
+          p = Path('world-v2-tune.css')
+          text = p.read_text(encoding='utf-8')
+          marker = '/* Screenshot QA: visible cleanup pass. */'
+          if marker not in text:
+              text += r'''
+
+/* Screenshot QA: visible cleanup pass. */
+
+/* Case outcomes must stay readable, including during the scan animation. */
+body.page-cases .case-outcome,
+body.page-cases .case-hub-card.is-step-result .case-outcome,
+body.page-cases .case-hub-card.has-focused-step .case-outcome{
+  background:#30231d!important;
+  border:1px solid rgba(168,135,85,.55)!important;
+}
+body.page-cases .case-outcome strong{color:#f7e9c9!important}
+body.page-cases .case-outcome span{color:rgba(247,233,201,.78)!important}
+
+/* Strategy bridge belongs inside the infographic, not outside the panel. */
+body.page-strategy .strategy-grid-2{overflow:hidden}
+body.page-strategy .strategy-asset-bridge{overflow:hidden!important}
+body.page-strategy .strategy-bridge-label{max-width:110px;text-align:center}
+
+/* About should stay quiet. The global decorative route was crossing readable copy. */
+body.page-about .world-route{display:none!important}
+
+/* Contact block needs breathing room and a protected area for the owl note. */
+body.page-about .contact-card{
+  padding:30px 32px 38px!important;
+  gap:28px!important;
+  align-items:center!important;
+}
+body.page-about .contact-card .eyebrow{margin-top:0!important}
+body.page-about .contact-card h2{margin-top:8px!important}
+body.page-about .contact-card>div:first-child>p:last-child{max-width:760px;margin-bottom:0!important}
+body.page-about .contact-actions{gap:10px!important;flex-wrap:wrap!important;justify-content:flex-end}
+body.page-about .contact-card::after{right:28px!important;bottom:14px!important}
+
+/* Keep the Work Library labels readable at normal laptop widths. */
+body.page-work .visual-work-head span,
+body.page-work .ebook-sample-card .visual-work-head span{font-size:.58rem!important;line-height:1.35!important}
+body.page-work .visual-work-head h3,
+body.page-work .ebook-sample-card .visual-work-head h3{line-height:1.25!important}
+body.page-work .ebook-sample-card>p,
+body.page-work .ebook-sample-card .ebook-caption{font-size:.66rem!important;line-height:1.5!important}
+
+/* The irregular homepage case shapes stay, but the Apty frame should not look broken. */
+body.page-home .enchanted-cases .feature-card:nth-child(3){
+  border-radius:30px 30px 92px 30px!important;
+  box-shadow:0 20px 55px rgba(48,35,29,.08)!important;
+}
+body.page-home .enchanted-cases .feature-card:nth-child(3)::before{
+  border-radius:22px 22px 76px 22px!important;
+}
+
+@media(max-width:760px){
+  body.page-about .contact-card{padding:24px 20px 34px!important}
+  body.page-about .contact-actions{justify-content:flex-start!important}
+  body.page-about .contact-card::after{left:20px!important;right:auto!important;bottom:10px!important}
+  body.page-strategy .strategy-grid-2{overflow:visible}
+}
+'''
+              p.write_text(text, encoding='utf-8')
+
+      - name: Commit fixes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html story.js about.html world-v2-tune.css
+          git commit -m "Fix visible portfolio inconsistencies"
+          git push origin HEAD:main
