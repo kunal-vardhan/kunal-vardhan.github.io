@@ -346,3 +346,52 @@ body.page-home .enchanted-cases .feature-card:nth-child(3)::before{
   body.page-about .contact-card::after{left:20px!important;right:auto!important;bottom:10px!important}
   body.page-strategy .strategy-grid-2{overflow:visible}
 }
+
+/* Screenshot QA round 2: fix what is visibly off, not just the underlying code. */
+
+/* Apty and Learniverse should stay irregular without looking like the card is melting off-screen. */
+body.page-home .enchanted-cases .feature-card:nth-child(3){
+  border-radius:28px 28px 46px 28px!important;
+}
+body.page-home .enchanted-cases .feature-card:nth-child(3)::before{
+  border-radius:20px 20px 36px 20px!important;
+}
+body.page-home .enchanted-cases .feature-card:nth-child(4){
+  border-radius:48px 28px 28px 28px!important;
+}
+body.page-home .enchanted-cases .feature-card:nth-child(4)::before{
+  border-radius:38px 20px 20px 20px!important;
+}
+
+/* The scan effect can de-emphasise a row, but it must never make proof unreadable. */
+body.page-cases .case-scan b{
+  color:#66786e!important;
+}
+body.page-cases .case-scan span{
+  color:#5f635f!important;
+}
+body.page-cases .case-hub-card.case-scan-motion .case-scan p{
+  opacity:1;
+}
+body.page-cases .case-hub-card.case-scan-motion.has-focused-step .case-scan p{
+  opacity:.72;
+}
+body.page-cases .case-hub-card.case-scan-motion.has-focused-step.is-step-role .case-scan p:first-child,
+body.page-cases .case-hub-card.case-scan-motion.has-focused-step.is-step-proof .case-scan p:nth-child(2){
+  opacity:1;
+}
+
+/* The Work Library title is long. It should feel editorial, not billboard-sized. */
+body.page-work .page-hero h1{
+  font-size:clamp(2.55rem,4.15vw,3.7rem)!important;
+  line-height:1.045!important;
+  letter-spacing:-.026em!important;
+  max-width:880px!important;
+}
+
+@media(max-width:760px){
+  body.page-work .page-hero h1{
+    font-size:clamp(2.15rem,9vw,3rem)!important;
+    line-height:1.06!important;
+  }
+}
