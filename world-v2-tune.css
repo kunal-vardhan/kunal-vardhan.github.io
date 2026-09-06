@@ -395,3 +395,24 @@ body.page-work .page-hero h1{
     line-height:1.06!important;
   }
 }
+
+
+/* Screenshot QA round 3: testimonial spacing. */
+body.page-home .review-card{
+  padding:24px 26px 22px!important;
+}
+body.page-home .review-card blockquote{
+  margin:0!important;
+}
+body.page-home .review-card footer{
+  margin-top:16px!important;
+  padding:0!important;
+  line-height:1.5!important;
+}
+body.page-home .review-card footer strong{
+  display:block;
+  margin-bottom:2px;
+}
+@media(max-width:760px){
+  body.page-home .review-card{padding:20px 20px 18px!important}
+}
